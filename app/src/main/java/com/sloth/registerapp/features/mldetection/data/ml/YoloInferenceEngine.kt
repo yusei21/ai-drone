@@ -62,10 +62,23 @@ class YoloInferenceEngine private constructor(
         val output = Array(1) { Array(outputDim) { FloatArray(predictionCount) } }
         interpreter.run(inputBuffer, output)
 
-        return if (outputDim == 5) {
-            decodeSingleClass(output[0])
+        // LiteRT-Torch YOLO26 exports normalized xywh values in [0, 1].
+        // Other YOLO TFLite exports may use pixel coordinates in [0, inputSize].
+        // Determine the format once per frame from the center coordinates.
+        val raw = output[0]
+        val pixelCoordinateCount = (0 until predictionCount).count { index ->
+            raw[0][index] > 2f || raw[1][index] > 2f
+        }
+        val coordinateScale = if (pixelCoordinateCount > predictionCount / 10) {
+            inputSize.toFloat()
         } else {
-            decodeMultiClass(output[0])
+            1f
+        }
+
+        return if (outputDim == 5) {
+            decodeSingleClass(raw, coordinateScale)
+        } else {
+            decodeMultiClass(raw, coordinateScale)
         }
     }
 
@@ -100,20 +113,20 @@ class YoloInferenceEngine private constructor(
     }
 
     // [1][5][8400]: row 4 = objectness confidence, single class
-    private fun decodeSingleClass(output: Array<FloatArray>): List<DetectionResult> {
+    private fun decodeSingleClass(output: Array<FloatArray>, coordinateScale: Float): List<DetectionResult> {
         val detections = mutableListOf<DetectionResult>()
         val label = model.classes.firstOrNull() ?: "Objeto"
         for (index in 0 until predictionCount) {
             val confidence = output[4][index]
             if (!confidence.isFinite() || confidence < CONFIDENCE_THRESHOLD) continue
-            val rect = extractRect(output, index) ?: continue
+            val rect = extractRect(output, index, coordinateScale) ?: continue
             detections += DetectionResult(label = label, confidence = confidence, normalizedRect = rect)
         }
         return nonMaximumSuppression(detections)
     }
 
     // [1][4+N][8400]: rows 4..4+N are class scores (YOLOv8 style)
-    private fun decodeMultiClass(output: Array<FloatArray>): List<DetectionResult> {
+    private fun decodeMultiClass(output: Array<FloatArray>, coordinateScale: Float): List<DetectionResult> {
         val numClasses = outputDim - 4
         val detections = mutableListOf<DetectionResult>()
         for (index in 0 until predictionCount) {
@@ -134,11 +147,11 @@ class YoloInferenceEngine private constructor(
         return nonMaximumSuppression(detections)
     }
 
-    private fun extractRect(output: Array<FloatArray>, index: Int): RectF? {
-        val centerX = output[0][index] / inputSize.toFloat()
-        val centerY = output[1][index] / inputSize.toFloat()
-        val width = output[2][index] / inputSize.toFloat()
-        val height = output[3][index] / inputSize.toFloat()
+    private fun extractRect(output: Array<FloatArray>, index: Int, coordinateScale: Float): RectF? {
+        val centerX = output[0][index] / coordinateScale
+        val centerY = output[1][index] / coordinateScale
+        val width = output[2][index] / coordinateScale
+        val height = output[3][index] / coordinateScale
         if (!centerX.isFinite() || !centerY.isFinite() || !width.isFinite() || !height.isFinite()) return null
         if (width <= MIN_BOX_SIZE || height <= MIN_BOX_SIZE) return null
         return RectF(
