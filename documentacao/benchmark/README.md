@@ -142,3 +142,21 @@ Resultados locais do experimento `conf=0.10`: `runs/detect/runs/ai_drone/benchma
 **Interpretação:** a alteração do limiar não demonstrou melhoria nas métricas de avaliação; P/R exibidos pelo avaliador não são necessariamente precisão/recall operacional no limiar `conf=0.10`. A redução de mAP pode resultar de eliminar detecções de baixa confiança usadas nas curvas. Não usar o split test-dev para ajustar continuamente o limiar: escolher o limiar na validação/desenvolvimento e, quando possível, testar em dados externos intocados.
 
 **Próxima ação recomendada:** inspecionar curvas `F1_curve.png`, `P_curve.png`, `R_curve.png` e `PR_curve.png` geradas pela validação (`runs/detect/runs/ai_drone/pessoas_960`) para identificar a troca entre recall e falsos alarmes. Para um limiar fixo, calcular explicitamente TP/FP/FN com o mesmo protocolo de correspondência por IoU, preferencialmente em `val`. Registrar critérios por cenário; não assumir um percentual único de confiança ideal.
+
+## Ajuste fino adicional de YOLO26n 960 (30 epocas)
+
+Executado no PC com `model=runs/detect/runs/ai_drone/pessoas_960/weights/last.pt`, `epochs=30`, `imgsz=960`, `batch=4`, `device=0`, no run `runs/detect/runs/ai_drone/pessoas_960_continuacao`.
+
+O comando iniciou **nova sessao de treinamento** usando pesos existentes, nao retomou o estado do otimizador. Duracao reportada: 0,862 h. Pesos selecionados: `runs/detect/runs/ai_drone/pessoas_960_continuacao/weights/best.pt` (~5,5 MB).
+
+| Metrica (split val: 548 imagens, 13.969 anotacoes) | Baseline 960 | Continuacao (best.pt) |
+| --- | ---: | ---: |
+| Precision | 0,706 | 0,715 |
+| Recall | 0,532 | 0,548 |
+| mAP50 | 0,608 | 0,622 |
+| mAP50-95 | 0,262 | 0,273 |
+
+O resultado final da epoca 30 foi P=0,723, R=0,543, mAP50=0,623, mAP50-95=0,273; o **checkpoint best.pt revalidado** apresentou P=0,715, R=0,548, mAP50=0,622, mAP50-95=0,273. Sao avaliacoes ligeiramente diferentes, e o checkpoint `best.pt` sera usado para comparacoes.
+
+**Interpretacao:** melhoria modesta na validacao, sem evidencia ainda de ganho no test-dev ou em imagens externas. Evitar repetidas escolhas/tuning no test-dev. Este novo `best.pt` pode ser exportado como candidato experimental para Android, sem substituir automaticamente o baseline de benchmark historico.
+
