@@ -200,3 +200,27 @@ O operador concluiu 30 épocas de treinamento do YOLO26n para a classe única `p
 4. Só então planejar exportação TFLite e integração no Android. Não usar detecção atual para voo autônomo nem busca operacional sem testes e controle humano.
 
 **Nota:** a classe única `pessoa` combina `pedestrian` e `people`; regiões ignoradas e negativos não revisados ainda podem influenciar métricas. Documentar avanços atuais neste plano e reservar `documentacao/ideias futuras/` apenas para funcionalidades adiadas.
+
+## Experimento controlado: validar o mesmo YOLO26n em 640 e 960 px
+
+O operador validou o modelo especializado `pessoas_baseline_corrigido/weights/best.pt` com `imgsz=960`, `batch=4`, no mesmo conjunto de 548 imagens e 13969 anotações de pessoas. **Não houve novo treinamento** entre as avaliações.
+
+| Métrica | 640 px (validação final do treinamento) | 960 px (validação adicional) |
+| --- | ---: | ---: |
+| Precisão | 0,610 | 0,666 |
+| Recall | 0,427 | 0,501 |
+| mAP50 | 0,476 | 0,566 |
+| mAP50-95 | 0,185 | 0,237 |
+| Inferência por imagem (RTX 4060 Ti, modo `val`) | 1,2 ms | 2,2 ms |
+
+Ganhos absolutos de 960 px: precisão +5,6 pontos percentuais, recall +7,4 p.p., mAP50 +9,0 p.p., mAP50-95 +5,2 p.p. O tempo de inferência durante validação foi ~1,83× maior (comparar com cautela pois medições de execução variam).
+
+Pasta local do teste: `runs/detect/runs/ai_drone/validacao_pessoas_960`.
+
+### Decisão
+
+- 960 px apresentou melhor qualidade nesse conjunto, mas o recall de ~50,1% ainda não atende uso de busca e resgate operacional.
+- A melhoria observada não justifica ainda treinamento mais caro ou integração Android sem medir no dispositivo.
+- Próximo experimento sugerido: avaliar um treino em 960 px, mantendo YOLO26n e o mesmo split, com configuração de `batch` adequada aos 8 GB de VRAM. Comparar desempenho com o mesmo protocolo de validação (ambos os modelos avaliados com `imgsz=960`).
+- Considerar também modelo maior como experimento separado; não alterar arquitetura e resolução simultaneamente no primeiro teste.
+- Revisar falsos negativos, áreas ignoradas e cenas independentes antes de declarar prontidão.
