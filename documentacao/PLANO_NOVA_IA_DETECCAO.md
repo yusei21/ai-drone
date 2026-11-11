@@ -146,3 +146,19 @@ find /home/yusei/Documents/workspace/datasets/VisDrone-pessoas/images/val -maxde
 ```
 
 **Valores esperados: 6471 train e 548 val.** Conferir também nas linhas de inicialização do YOLO `train: Scanning ... 6471` e `val: Scanning ... 548` antes de treinar 30 épocas novamente. Usar outro nome de experimento, por exemplo `pessoas_baseline_corrigido`, e não sobrescrever o experimento anterior. Se a contagem inicial ainda estiver errada, interromper e investigar antes do treino. Mesmo com essa correção, é necessária revisão das imagens negativas e anotações ignoradas.
+
+## Verificação da correção dos arquivos — confirmada pelo operador
+
+O operador atualizou o repositório até `ec4c78c`, reexecutou `scripts/preparar_visdrone_pessoas.py` e verificou a contagem de arquivos regulares com `find -maxdepth 1 -type f`:
+
+- `images/train`: **6471 arquivos**.
+- `images/val`: **548 arquivos**.
+- Anotações convertidas informadas: 106396 pessoas (treino) e 13969 (validação).
+
+**Status:** a organização física do dataset está corrigida. Falta confirmar a descoberta das imagens pelo carregador Ultralytics. Próxima verificação recomendada sem novo treinamento: 
+
+```fish
+yolo detect val model=yolo26n.pt data=/home/yusei/Documents/workspace/datasets/VisDrone-pessoas/pessoas.yaml imgsz=640 batch=4 device=0 workers=4 project=runs/ai_drone name=validacao_dataset
+```
+
+Checar se a inicialização/saída mostra 548 imagens de validação e um número de instâncias plausível próximo às 13969 anotações (possíveis diferenças por filtros do carregador). **As métricas de detecção deste comando não servem para escolher a nova IA**: usa pesos genéricos de dez classes em conjunto de uma classe e pode haver incompatibilidade de índices. O objetivo é conferir apenas o carregamento. Se a contagem estiver correta, proceder com treino especializado de novo nome `pessoas_baseline_corrigido`, nunca usar o modelo anterior validado com uma imagem.
