@@ -22,16 +22,22 @@ class YoloInferenceEngine private constructor(
 ) : Closeable {
 
     private val inputSize: Int
+    private val isNchw: Boolean
     private val predictionCount: Int
     private val outputDim: Int
 
     init {
         val inputShape = interpreter.getInputTensor(0).shape()
         val outputShape = interpreter.getOutputTensor(0).shape()
-        inputSize = inputShape.getOrNull(2) ?: DEFAULT_INPUT_SIZE
-        require(inputShape.size == 4 && inputShape[0] == 1 && inputShape[3] == 3) {
-            "Formato de entrada nao suportado: ${inputShape.contentToString()} (esperado NHWC RGB)"
+        require(inputShape.size == 4 && inputShape[0] == 1) {
+            "Entrada TFLite deve ter formato de lote unico: ${inputShape.contentToString()}"
         }
+        isNchw = inputShape[1] == 3 && inputShape[2] == inputShape[3]
+        val isNhwc = inputShape[3] == 3 && inputShape[1] == inputShape[2]
+        require(isNchw || isNhwc) {
+            "Formato de entrada nao suportado: ${inputShape.contentToString()} (esperado NCHW ou NHWC RGB quadrado)"
+        }
+        inputSize = if (isNchw) inputShape[2] else inputShape[1]
         require(interpreter.getInputTensor(0).dataType() == org.tensorflow.lite.DataType.FLOAT32) {
             "Entrada TFLite precisa ser FLOAT32 (exportar sem quantizacao)"
         }
@@ -73,10 +79,21 @@ class YoloInferenceEngine private constructor(
             .order(ByteOrder.nativeOrder())
         val pixels = IntArray(inputSize * inputSize)
         bitmap.getPixels(pixels, 0, inputSize, 0, 0, inputSize, inputSize)
-        for (pixel in pixels) {
-            buffer.putFloat(((pixel shr 16) and 0xFF) / 255f)
-            buffer.putFloat(((pixel shr 8) and 0xFF) / 255f)
-            buffer.putFloat((pixel and 0xFF) / 255f)
+        if (isNchw) {
+            // LiteRT-Torch exports YOLO26 with [1,3,H,W] (channel-first).
+            // Channels must be contiguous: all red pixels, then green, then blue.
+            for (shift in intArrayOf(16, 8, 0)) {
+                for (pixel in pixels) {
+                    buffer.putFloat(((pixel shr shift) and 0xFF) / 255f)
+                }
+            }
+        } else {
+            // Standard TensorFlow Lite exports often use [1,H,W,3].
+            for (pixel in pixels) {
+                buffer.putFloat(((pixel shr 16) and 0xFF) / 255f)
+                buffer.putFloat(((pixel shr 8) and 0xFF) / 255f)
+                buffer.putFloat((pixel and 0xFF) / 255f)
+            }
         }
         buffer.rewind()
         return buffer
@@ -157,8 +174,6 @@ class YoloInferenceEngine private constructor(
 
     companion object {
         private const val TAG = "YoloInferenceEngine"
-        private const val DEFAULT_INPUT_SIZE = 640
-        private const val DEFAULT_PREDICTION_COUNT = 8400
         private const val CONFIDENCE_THRESHOLD = 0.27f
         private const val IOU_THRESHOLD = 0.45f
         private const val MAX_DETECTIONS = 20
