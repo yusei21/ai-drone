@@ -49,3 +49,38 @@ Esses números vieram dos logs informados pelo operador e são relativos ao mesm
 5. Só depois comparar alternativas como YOLO26s, inferência a 640 e 960, TFLite e execução no tablet.
 
 O detector atual ainda **não é adequado para decisões autônomas de voo ou busca e resgate operacional** sem validação adicional e supervisão.
+
+## Benchmark automatizado com o VisDrone test-dev
+
+Há uma terceira divisão oficial do VisDrone, `test-dev`, contendo **1.610 imagens com anotações**, separadas de `train` e `val`. O script `scripts/preparar_visdrone_pessoas.py` agora prepara também `test` quando existem `images/test` e `labels/test` no VisDrone original. Esta avaliação será independente do conjunto que orientou a escolha de 960 px, embora continue no mesmo domínio de imagens VisDrone. <https://docs.ultralytics.com/datasets/detect/visdrone/>
+
+### Procedimento no PC (Fish)
+
+```fish
+cd /home/yusei/Documents/workspace/ai-drone
+git pull origin main
+python scripts/preparar_visdrone_pessoas.py
+```
+
+Confirmar no terminal `test: 1610 imagens` e conferir que o arquivo `/home/yusei/Documents/workspace/datasets/VisDrone-pessoas/pessoas.yaml` contém `test: images/test`.
+
+Se `test` não estiver disponível, não executar a avaliação até obter a divisão oficial do VisDrone. O comando `yolo detect val model=yolo26n.pt data=VisDrone.yaml split=test` pode inicializar/baixar a divisão de teste por meio da configuração oficial Ultralytics, mas **usa outro modelo** apenas para preparar os dados e não deve ser confundido com a avaliação do detector do ai-drone. Em seguida reexecutar o script de preparação.
+
+**Benchmark do modelo de 960 px (depois de confirmar `test`):**
+
+```fish
+yolo detect val \
+    model=runs/detect/runs/ai_drone/pessoas_960/weights/best.pt \
+    data=/home/yusei/Documents/workspace/datasets/VisDrone-pessoas/pessoas.yaml \
+    split=test \
+    imgsz=960 \
+    batch=4 \
+    device=0 \
+    workers=4 \
+    project=runs/ai_drone \
+    name=benchmark_testdev_960
+```
+
+Verificar no log que o carregador analisou **1.610 imagens**. Anotar precisão, recall, mAP50 e mAP50-95; os valores só serão conhecidos após execução no PC. Não fazer ajustes usando esses resultados e depois tratá-los como teste final intocado.
+
+**Limitação importante:** `test-dev` verifica generalização para outras imagens do VisDrone, mas não substitui testes em vídeos reais do DJI Mavic Pro, ambientes de vegetação locais e medições no Galaxy Tab S9.
