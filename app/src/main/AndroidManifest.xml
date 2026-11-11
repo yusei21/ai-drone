@@ -92,6 +92,14 @@
             android:theme="@style/Theme.RegisterApp"
             tools:ignore="LockedOrientationActivity" />
 
+        <!-- Teste de IA offline: camera do tablet, sem DJI nem servidor -->
+        <activity
+            android:name="com.sloth.registerapp.presentation.video.activities.OfflineAiTestActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.RegisterApp"
+            tools:ignore="LockedOrientationActivity" />
+
         <!-- Cadastro Facial (VERTICAL) -->
         <!-- ✅ ADICIONE ESTA ACTIVITY -->
         <activity
