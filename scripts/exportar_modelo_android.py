@@ -66,7 +66,7 @@ def main() -> None:
     shape_out = list(map(int, output_infos[0]["shape"])) if len(output_infos) == 1 else []
     ok = (
         len(shape_in) == 4
-        and shape_in == [1, args.imgsz, args.imgsz, 3]
+        and shape_in in ([1, args.imgsz, args.imgsz, 3], [1, 3, args.imgsz, args.imgsz])
         and str(input_info["dtype"]) in ("<class 'numpy.float32'>", "float32")
         and len(output_infos) == 1
         and len(shape_out) == 3
@@ -80,7 +80,8 @@ def main() -> None:
             "Formato incompativel com o decoder Android atual. "
             "Envie o shape de entrada e de saida antes de importar."
         )
-    print("OK: tensores compativeis com o decoder preliminar do Android.")
+    print("Layout de entrada:", "NCHW" if shape_in[1] == 3 else "NHWC")
+    print("OK: tensores compativeis com o decoder preliminar do Android atualizado.")
     print("A equivalencia de caixas e confiancas ainda deve ser testada em imagens reais.")
 
 
