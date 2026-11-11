@@ -1,6 +1,6 @@
 # Plano ativo de IA: Rust e precisão em múltiplos ângulos
 
-**Status:** plano de implementação; Rust ainda não foi integrado ao Android. Preservar Kotlin/TFLite funcional até validação.
+**Status:** núcleo Rust experimental disponível em `rust/ai-drone-vision` (decodificação de caixas de pessoas e NMS, com testes). Ainda não integrado ao APK Android; preservar Kotlin/TFLite até validar JNI e desempenho.
 
 ## Prioridades
 
