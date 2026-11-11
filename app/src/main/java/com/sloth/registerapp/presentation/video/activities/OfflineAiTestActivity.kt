@@ -44,6 +44,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -200,6 +201,15 @@ private fun OfflineAiTestScreen(onClose: () -> Unit) {
         }
     }
 
+    val detectionLabelPaint = remember {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = android.graphics.Color.WHITE
+            textSize = 32f
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            setShadowLayer(3f, 1f, 2f, android.graphics.Color.BLACK)
+        }
+    }
+
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         if (cameraGranted) {
             AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
@@ -214,6 +224,12 @@ private fun OfflineAiTestScreen(onClose: () -> Unit) {
                             ((r.bottom - r.top) * size.height).coerceAtLeast(0f)
                         ),
                         style = Stroke(width = 3.dp.toPx())
+                    )
+                    drawContext.canvas.nativeCanvas.drawText(
+                        "pessoa ${(d.confidence * 100f).toInt()}%",
+                        r.left * size.width,
+                        (r.top * size.height - 8f).coerceAtLeast(36f),
+                        detectionLabelPaint
                     )
                 }
             }
