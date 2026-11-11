@@ -1,0 +1,40 @@
+# IntelliJ / Android Studio
+.idea/
+*.iml
+
+# Gradle / Kotlin
+.gradle/
+.kotlin/
+
+# VS Code
+.vscode/
+
+# Legacy app
+app-legado/
+
+# Local config
+local.properties
+.env
+.env.*
+
+# Builds
+build/
+**/build/
+/captures
+.externalNativeBuild/
+.cxx/
+
+# Logs
+*.log
+
+# OS / Misc
+.DS_Store
+
+# Docs
+*.md
+!README.md
+!docs/
+!docs/*.md
+
+# Sentry Config File
+sentry.properties

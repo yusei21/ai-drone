@@ -1,0 +1,106 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <LinearLayout
+        android:id="@+id/status_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="#80000000"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp">
+
+        <TextView
+            android:id="@+id/status_connection_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Câmera Celular"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:drawableStartCompat="@drawable/ic_signal_wifi_4_bar"
+            app:drawableTint="@android:color/white"
+            android:drawablePadding="4dp"/>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/status_battery_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="100%"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:drawableEndCompat="@drawable/ic_battery_full"
+            app:drawableTint="@android:color/white"
+            android:drawablePadding="4dp"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:orientation="horizontal"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="10dp">
+
+        <ImageButton
+            android:id="@+id/button_drone_camera"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="14dp"
+            android:background="@drawable/button_background_square"
+            android:contentDescription="Mudar para Camera do Drone"
+            android:padding="8dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/drone_icon" />
+
+        <Switch
+            android:id="@+id/cameraSwitch"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="14dp"
+            android:checked="false"
+            android:background="@drawable/button_background_square"
+            android:drawableTop="@drawable/ic_switch_camera_padded"
+            android:text=""
+            android:thumb="@android:color/transparent"
+            android:layout_gravity="center_vertical"
+            tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+        <ToggleButton
+            android:id="@+id/button_toggle_overlay"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/button_background_square"
+            android:drawableTop="@drawable/toggle_overlay_selector"
+            android:padding="8dp"
+            android:textOn=""
+            android:textOff=""
+            android:checked="true" />
+
+    </LinearLayout>
+
+</RelativeLayout>

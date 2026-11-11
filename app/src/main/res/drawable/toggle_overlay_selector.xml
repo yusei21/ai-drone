@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Estado: Botão LIGADO (mostra o ícone de visibilidade LIGADA) -->
+    <item android:drawable="@drawable/ic_visibility_on" android:state_checked="true" />
+
+    <!-- Estado: Botão DESLIGADO (mostra o ícone de visibilidade DESLIGADA) -->
+    <item android:drawable="@drawable/ic_visibility_off" android:state_checked="false" />
+
+</selector>

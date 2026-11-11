@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Permissões necessárias -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" /> <!-- Recursos do hardware -->
+    <uses-feature android:name="android.hardware.usb.host" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
+    <application
+        android:name=".MyApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.RegisterApp"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
+ <!-- DJI SDK API KEY -->
+        <meta-data
+            android:name="com.dji.sdk.API_KEY"
+            android:value="791ba3a47ec253e38bae3e76" /> <!-- Biblioteca USB necessária -->
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+        <uses-library
+            android:name="com.android.future.usb.accessory"
+            android:required="false" />
+
+        <!-- Tela Principal - Nova App de Drone -->
+        <activity
+            android:name="com.sloth.registerapp.presentation.app.main.activities.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.RegisterApp"
+            tools:ignore="LockedOrientationActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
+                android:resource="@xml/accessory_filter" />
+        </activity>
+
+        <!-- Controle de Missão -->
+        <activity
+            android:name="com.sloth.registerapp.presentation.mission.activities.MissionControlActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.RegisterApp"
+            tools:ignore="LockedOrientationActivity" />
+
+        <!-- Feed de vídeo - LANDSCAPE -->
+        <activity
+            android:name="com.sloth.registerapp.presentation.video.activities.DroneCameraActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.RegisterApp"
+            tools:ignore="LockedOrientationActivity" />
+
+        <!-- Cadastro Facial (VERTICAL) -->
+        <!-- ✅ ADICIONE ESTA ACTIVITY -->
+        <activity
+            android:name="com.sloth.registerapp.presentation.facedetection.activities.FaceRegistrationActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.RegisterApp"
+            tools:ignore="LockedOrientationActivity" />
+
+        <activity
+            android:name="com.sloth.registerapp.presentation.facedetection.activities.RegisteredFacesActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.RegisterApp"
+            tools:ignore="LockedOrientationActivity" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+    
+    <meta-data android:name="io.sentry.dsn" android:value="${sentryDsn}" />
+    <meta-data android:name="io.sentry.send-default-pii" android:value="false" />
+
+    <!-- enable automatic breadcrumbs for user interactions (clicks, swipes, scrolls) -->
+    <meta-data android:name="io.sentry.traces.user-interaction.enable" android:value="true" />
+    <!-- Camera, map and mission screens can contain sensitive visual/location data. -->
+    <meta-data android:name="io.sentry.attach-screenshot" android:value="false" />
+    <!-- enable view hierarchy for crashes -->
+    <meta-data android:name="io.sentry.attach-view-hierarchy" android:value="true" />
+
+    <meta-data android:name="io.sentry.traces.sample-rate" android:value="${sentryTracesSampleRate}" />
+    <meta-data android:name="io.sentry.profiles.sample-rate" android:value="${sentryProfilesSampleRate}" />
+    <meta-data android:name="io.sentry.logs.enabled" android:value="false" />
+</application>
+
+</manifest>

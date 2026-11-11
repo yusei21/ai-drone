@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Estilo Base do Tema IFMA -->
+    <style name="IFMADroneTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/ifma_green_primary</item>
+        <item name="colorPrimaryDark">@color/ifma_green_dark</item>
+        <item name="colorAccent">@color/ifma_green_accent</item>
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
+    </style>
+
+    <!-- Estilo para Textos de Telemetria -->
+    <style name="TelemetryText">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/gray_text</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
+    </style>
+
+    <style name="TelemetryValue">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">@color/ifma_green_primary</item>
+        <item name="android:fontFamily">@font/roboto_bold</item>
+    </style>
+
+    <!-- Estilo para Botões de Controle -->
+    <style name="ControlButton">
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:scaleType">centerInside</item>
+    </style>
+
+    <!-- Estilo para Cards -->
+    <style name="ControlCard">
+        <item name="cardCornerRadius">24dp</item>
+        <item name="cardElevation">4dp</item>
+        <item name="cardBackgroundColor">@color/ifma_green_background</item>
+    </style>
+
+</resources>

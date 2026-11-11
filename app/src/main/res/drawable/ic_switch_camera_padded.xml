@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:width="32dp"
+        android:height="32dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+
+    <item
+        android:width="16dp"
+        android:height="16dp"
+        android:drawable="@drawable/ic_switch_camera"
+        android:gravity="center" />
+
+</layer-list>

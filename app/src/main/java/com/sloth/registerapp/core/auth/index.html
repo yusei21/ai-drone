@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vantly Neural (UI)</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --surface: rgba(255,255,255,.06);
+      --surface2: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --muted2: rgba(255,255,255,.55);
+      --primary: #4ea1ff;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+
+      --r12: 12px;
+      --r16: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --maxw: 420px;
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 900px at 30% -20%, rgba(78,161,255,.18), transparent 55%),
+                  radial-gradient(900px 700px at 90% 20%, rgba(34,197,94,.10), transparent 50%),
+                  var(--bg);
+      color: var(--text);
+    }
+
+    /* frame "mobile" (opcional, só pra demo em desktop) */
+    .app{
+      max-width: var(--maxw);
+      margin: 0 auto;
+      min-height: 100svh;
+      padding-bottom: 84px; /* espaço pro bottom nav */
+    }
+
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,18,32,.72);
+      border-bottom: 1px solid var(--stroke);
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
+
+    .logo{
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(78,161,255,.35), rgba(255,255,255,.06));
+      border: 1px solid var(--stroke);
+      display:grid;
+      place-items:center;
+      box-shadow: var(--shadow);
+      flex: 0 0 auto;
+    }
+
+    .brand h1{
+      font-size: 16px;
+      margin:0;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .brand p{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex: 0 0 auto;
+    }
+    .iconbtn{
+      width: 38px; height: 38px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+    }
+    .iconbtn:hover{ background: rgba(255,255,255,.08); }
+    .avatar{
+      width: 38px; height: 38px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(78,161,255,.18);
+      display:grid;
+      place-items:center;
+      font-weight: 700;
+      color: rgba(255,255,255,.88);
+      cursor:pointer;
+    }
+
+    main{ padding: 16px; display:flex; flex-direction:column; gap: 12px; }
+
+    .card{
+      border-radius: var(--r16);
+      background: linear-gradient(180deg, var(--surface), rgba(255,255,255,.04));
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .row{
+      display:flex; align-items:center; justify-content:space-between; gap: 12px;
+    }
+
+    .title{
+      font-size: 14px;
+      margin:0 0 4px 0;
+      color: var(--muted);
+      letter-spacing: .2px;
+    }
+    .big{
+      font-size: 18px;
+      margin:0;
+      font-weight: 700;
+      letter-spacing: .2px;
+    }
+    .sub{
+      margin: 6px 0 0 0;
+      color: var(--muted2);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .dot{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(245,158,11,.12);
+    }
+
+    .btn{
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: linear-gradient(135deg, rgba(78,161,255,.95), rgba(78,161,255,.70));
+      color: #041022;
+      font-weight: 800;
+      cursor:pointer;
+      box-shadow: 0 12px 25px rgba(78,161,255,.20);
+      white-space: nowrap;
+    }
+    .btn:disabled{
+      opacity: .55;
+      cursor:not-allowed;
+      box-shadow: none;
+    }
+    .btn.secondary{
+      background: rgba(255,255,255,.07);
+      color: var(--text);
+      border: 1px solid var(--stroke);
+      box-shadow: none;
+      font-weight: 650;
+    }
+
+    .grid3{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .action{
+      border-radius: var(--r16);
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      padding: 12px;
+      cursor:pointer;
+      min-height: 92px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+    .action:hover{ background: rgba(255,255,255,.08); }
+    .action .ic{
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      display:grid;
+      place-items:center;
+      background: rgba(255,255,255,.06);
+    }
+    .action .name{
+      margin: 10px 0 2px 0;
+      font-weight: 750;
+      letter-spacing: .2px;
+    }
+    .action .hint{
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted2);
+      line-height: 1.2;
+    }
+
+    .sectionHead{
+      margin-top: 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .sectionHead h2{
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: .2px;
+    }
+    .link{
+      color: rgba(78,161,255,.95);
+      font-size: 13px;
+      cursor:pointer;
+      user-select:none;
+    }
+
+    .pills{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .pill{
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+    }
+    .pill.active{
+      background: rgba(78,161,255,.14);
+      color: rgba(255,255,255,.92);
+      border-color: rgba(78,161,255,.35);
+    }
+
+    .hscroll{
+      display:flex;
+      gap: 10px;
+      overflow:auto;
+      padding-bottom: 2px;
+      scroll-snap-type: x mandatory;
+    }
+    .hscroll::-webkit-scrollbar{ height: 8px; }
+    .hscroll::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.12); border-radius: 999px; }
+
+    .drone{
+      min-width: 150px;
+      scroll-snap-align: start;
+      border-radius: var(--r16);
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      padding: 12px;
+    }
+    .drone .top{
+      display:flex; align-items:center; justify-content:space-between; gap: 10px;
+    }
+    .badge{
+      font-size: 11px;
+      padding: 5px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+    }
+    .drone .model{ margin: 10px 0 4px 0; font-weight: 800; }
+    .drone .meta{ margin:0; color: var(--muted2); font-size: 12px; }
+
+    .bottomnav{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: min(var(--maxw), 100%);
+      border-top: 1px solid var(--stroke);
+      background: rgba(11,18,32,.82);
+      backdrop-filter: blur(12px);
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      z-index: 20;
+    }
+    .navitem{
+      border-radius: 14px;
+      padding: 10px 8px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 6px;
+      color: var(--muted2);
+      cursor:pointer;
+      user-select:none;
+    }
+    .navitem.active{
+      color: rgba(255,255,255,.92);
+      background: rgba(78,161,255,.12);
+      border: 1px solid rgba(78,161,255,.25);
+    }
+    .navitem span{ font-size: 11px; }
+
+    /* toast */
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 92px;
+      width: min(calc(var(--maxw) - 32px), calc(100% - 32px));
+      background: rgba(0,0,0,.55);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: rgba(255,255,255,.92);
+      display:none;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      z-index: 30;
+      font-size: 13px;
+    }
+
+    /* responsivo pra telas menores */
+    @media (max-width: 360px){
+      .grid3{ grid-template-columns: 1fr; }
+      .action{ min-height: 80px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <!-- ícone simples (formal > emoji) -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M7 12h10" stroke="rgba(255,255,255,.9)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4 9l3 3-3 3" stroke="rgba(255,255,255,.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20 9l-3 3 3 3" stroke="rgba(255,255,255,.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div style="min-width:0">
+          <h1>Vantly Neural</h1>
+          <p>Sistema de operações de drones</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="iconbtn" id="btnSettings" aria-label="Configurações">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="rgba(255,255,255,.9)" stroke-width="2"/>
+            <path d="M19.4 15a7.8 7.8 0 0 0 .1-1l2-1.2-2-3.5-2.3.5a7.8 7.8 0 0 0-.8-.6L14.9 6h-4L9.6 9.2c-.3.2-.6.4-.8.6L6.5 9.3l-2 3.5 2 1.2a7.8 7.8 0 0 0 0 2l-2 1.2 2 3.5 2.3-.5c.2.2.5.4.8.6L10.9 22h4l1.3-3.2c.3-.2.6-.4.8-.6l2.3.5 2-3.5-2-1.2Z"
+              stroke="rgba(255,255,255,.6)" stroke-width="1.4" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="avatar" id="btnProfile" title="Perfil">JP</div>
+      </div>
+    </header>
+
+    <main>
+      <!-- Boas-vindas (compacto e útil) -->
+      <section class="card">
+        <p class="title">Olá, José</p>
+        <p class="big">Pronto para iniciar uma missão?</p>
+        <p class="sub">Selecione um drone e conecte para acessar controle, telemetria e vídeo ao vivo.</p>
+      </section>
+
+      <!-- Status + CTA contextual -->
+      <section class="card">
+        <div class="row">
+          <div>
+            <p class="title">Status do drone</p>
+            <div class="chip" id="statusChip">
+              <span class="dot" id="statusDot"></span>
+              <span id="statusText">Nenhum drone selecionado</span>
+            </div>
+          </div>
+          <button class="btn" id="btnConnect" disabled>Conectar</button>
+        </div>
+        <p class="sub" id="statusHint">Escolha um modelo compatível abaixo para habilitar a conexão.</p>
+      </section>
+
+      <!-- Projeto (colapsável) -->
+      <section class="card">
+        <div class="sectionHead">
+          <h2>Sobre o projeto</h2>
+          <div class="link" id="toggleAbout">Ocultar</div>
+        </div>
+        <div id="aboutBody">
+          <p class="sub" style="margin-top:10px">
+            Plataforma para planejamento, execução e monitoramento de missões, com telemetria e suporte a automações.
+          </p>
+          <div class="pills" role="list">
+            <div class="pill active" data-pill="missions">Missões</div>
+            <div class="pill" data-pill="telemetry">Telemetria</div>
+            <div class="pill" data-pill="ai">IA</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ações principais (consistentes, sem texto cortado) -->
+      <div class="sectionHead">
+        <h2>Ações principais</h2>
+        <div class="link" id="seeAll">Ver tudo</div>
+      </div>
+
+      <section class="grid3">
+        <div class="action" data-action="live">
+          <div class="ic" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M4 7h16v10H4V7Z" stroke="rgba(255,255,255,.85)" stroke-width="2"/>
+              <path d="M10 20h4" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <p class="name">Vídeo ao vivo</p>
+            <p class="hint">Baixa latência e gravação</p>
+          </div>
+        </div>
+
+        <div class="action" data-action="missions">
+          <div class="ic" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M6 7h12M6 12h12M6 17h8" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <p class="name">Missões</p>
+            <p class="hint">Waypoints e rotas</p>
+          </div>
+        </div>
+
+        <div class="action" data-action="control">
+          <div class="ic" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M7 15l-2 2m14-2l2 2M8 14a4 4 0 0 1 8 0" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12 10v3" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <p class="name">Controle</p>
+            <p class="hint">Modos e segurança</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Drones compatíveis (coerente e selecionável) -->
+      <div class="sectionHead">
+        <h2>Drones compatíveis</h2>
+        <div class="link" id="clearDrone">Limpar</div>
+      </div>
+
+      <section class="hscroll" id="droneList" aria-label="Lista de drones compatíveis">
+        <div class="drone" data-drone="mavic3">
+          <div class="top">
+            <div class="badge">DJI</div>
+            <div class="badge">Vídeo + Telemetria</div>
+          </div>
+          <p class="model">Mavic 3</p>
+          <p class="meta">Missões leves e inspeção</p>
+        </div>
+
+        <div class="drone" data-drone="matrice30">
+          <div class="top">
+            <div class="badge">DJI</div>
+            <div class="badge">Industrial</div>
+          </div>
+          <p class="model">Matrice 30</p>
+          <p class="meta">Operação robusta</p>
+        </div>
+
+        <div class="drone" data-drone="mini4">
+          <div class="top">
+            <div class="badge">DJI</div>
+            <div class="badge">Compacto</div>
+          </div>
+          <p class="model">Mini 4</p>
+          <p class="meta">Treino e missões simples</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- bottom nav (melhor que FAB cobrindo conteúdo) -->
+  <nav class="bottomnav" aria-label="Navegação">
+    <div class="navitem active" data-nav="home">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"
+          stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+      <span>Início</span>
+    </div>
+    <div class="navitem" data-nav="missions">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M6 7h12M6 12h12M6 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Missões</span>
+    </div>
+    <div class="navitem" data-nav="telemetry">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M4 18h16M6 16V8m6 8V6m6 10v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Telemetria</span>
+    </div>
+    <div class="navitem" data-nav="control">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M7 15l-2 2m14-2l2 2M8 14a4 4 0 0 1 8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M12 10v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Controle</span>
+    </div>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const toast = (msg) => {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.style.display = 'block';
+      clearTimeout(window.__t);
+      window.__t = setTimeout(() => el.style.display = 'none', 2400);
+    };
+
+    // status model
+    let selectedDrone = null;
+    let connected = false;
+
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const statusHint = document.getElementById('statusHint');
+    const btnConnect = document.getElementById('btnConnect');
+
+    const setStatus = () => {
+      if (!selectedDrone){
+        connected = false;
+        statusDot.style.background = getComputedStyle(document.documentElement).getPropertyValue('--warn');
+        statusDot.style.boxShadow = '0 0 0 4px rgba(245,158,11,.12)';
+        statusText.textContent = 'Nenhum drone selecionado';
+        statusHint.textContent = 'Escolha um modelo compatível abaixo para habilitar a conexão.';
+        btnConnect.disabled = true;
+        btnConnect.textContent = 'Conectar';
+        return;
+      }
+      if (!connected){
+        statusDot.style.background = getComputedStyle(document.documentElement).getPropertyValue('--primary');
+        statusDot.style.boxShadow = '0 0 0 4px rgba(78,161,255,.14)';
+        statusText.textContent = 'Pronto para conexão';
+        statusHint.textContent = `Drone selecionado: ${selectedDrone}. Conecte para iniciar telemetria e vídeo.`;
+        btnConnect.disabled = false;
+        btnConnect.textContent = 'Conectar';
+        return;
+      }
+      statusDot.style.background = getComputedStyle(document.documentElement).getPropertyValue('--good');
+      statusDot.style.boxShadow = '0 0 0 4px rgba(34,197,94,.14)';
+      statusText.textContent = 'Conectado';
+      statusHint.textContent = `Conectado ao ${selectedDrone}. Sistemas ativos e monitorando.`;
+      btnConnect.disabled = false;
+      btnConnect.textContent = 'Desconectar';
+    };
+
+    // selecionar drone
+    document.getElementById('droneList').addEventListener('click', (e) => {
+      const card = e.target.closest('.drone');
+      if (!card) return;
+
+      document.querySelectorAll('.drone').forEach(d => d.style.outline = 'none');
+      card.style.outline = '2px solid rgba(78,161,255,.45)';
+      card.style.outlineOffset = '2px';
+
+      selectedDrone = card.querySelector('.model').textContent;
+      connected = false;
+      setStatus();
+      toast(`Selecionado: ${selectedDrone}`);
+    });
+
+    // conectar/desconectar
+    btnConnect.addEventListener('click', () => {
+      if (!selectedDrone) return;
+      connected = !connected;
+      setStatus();
+      toast(connected ? 'Conexão estabelecida.' : 'Conexão encerrada.');
+    });
+
+    // limpar seleção
+    document.getElementById('clearDrone').addEventListener('click', () => {
+      selectedDrone = null;
+      connected = false;
+      document.querySelectorAll('.drone').forEach(d => d.style.outline = 'none');
+      setStatus();
+      toast('Seleção removida.');
+    });
+
+    // about collapse
+    let aboutOpen = true;
+    document.getElementById('toggleAbout').addEventListener('click', () => {
+      aboutOpen = !aboutOpen;
+      document.getElementById('aboutBody').style.display = aboutOpen ? 'block' : 'none';
+      document.getElementById('toggleAbout').textContent = aboutOpen ? 'Ocultar' : 'Mostrar';
+    });
+
+    // pills (exemplo de filtro/aba)
+    document.querySelectorAll('.pill').forEach(p => {
+      p.addEventListener('click', () => {
+        document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+        p.classList.add('active');
+        toast(`Modo: ${p.textContent}`);
+      });
+    });
+
+    // actions
+    document.querySelectorAll('.action').forEach(a => {
+      a.addEventListener('click', () => {
+        const kind = a.dataset.action;
+        const map = {
+          live: 'Abrindo vídeo ao vivo…',
+          missions: 'Abrindo missões…',
+          control: 'Abrindo controle…'
+        };
+        toast(map[kind] || 'Ação');
+      });
+    });
+
+    // bottom nav
+    document.querySelectorAll('.navitem').forEach(n => {
+      n.addEventListener('click', () => {
+        document.querySelectorAll('.navitem').forEach(x => x.classList.remove('active'));
+        n.classList.add('active');
+        toast(`Navegação: ${n.querySelector('span').textContent}`);
+      });
+    });
+
+    // settings/profile
+    document.getElementById('btnSettings').addEventListener('click', () => toast('Configurações'));
+    document.getElementById('btnProfile').addEventListener('click', () => toast('Perfil'));
+
+    setStatus();
+  </script>
+</body>
+</html>
