@@ -96,3 +96,31 @@ O operador confirmou no PC a presença de **1.610 JPGs** em `VisDrone/images/tes
 | test | **1.610** | **27.382** | **343** |
 
 O arquivo YAML foi gerado em `/home/yusei/Documents/workspace/datasets/VisDrone-pessoas/pessoas.yaml`. **Benchmark ainda não executado** no momento deste registro. Próximo passo: rodar `yolo detect val` com `split=test`, `imgsz=960` e `pessoas_960/weights/best.pt` para obter as métricas. Conferir se o carregador efetivamente lê 1.610 imagens e registrar os resultados reais. As 343 imagens sem rótulo de pessoa podem incluir regiões ignoradas ou alvos não anotados; revisar antes de interpretar falsos positivos.
+
+## Resultado do benchmark independente — execução concluída
+
+Modelo: `runs/detect/runs/ai_drone/pessoas_960/weights/best.pt`. Configuração: `split=test`, `imgsz=960`, `batch=4`, `device=0`, `workers=4`. Ultralytics 8.4.210, RTX 4060 Ti.
+
+Conjunto: **1.610 imagens** e **27.382 anotações de pessoas** do VisDrone test-dev; a divisão test-dev não participou do treino nem da escolha de hiperparâmetros registrados até aqui.
+
+| Métrica | Validação (548 imagens) | Benchmark test-dev (1.610 imagens) | Diferença |
+| --- | ---: | ---: | ---: |
+| Precisão | 0,706 | **0,572** | −13,4 p.p. |
+| Recall | 0,532 | **0,357** | −17,5 p.p. |
+| mAP50 | 0,608 | **0,378** | −23,0 p.p. |
+| mAP50-95 | 0,262 | **0,148** | −11,4 p.p. |
+
+- Velocidade de validação no PC: pré-processamento 0,6 ms, **inferência 2,4 ms**, pós-processamento 0,6 ms por imagem.
+- O carregador elevou `max_det` automaticamente de 300 para 376 devido a uma imagem com até 376 objetos.
+- Resultados locais: `runs/detect/runs/ai_drone/benchmark_testdev_960`.
+- **Interpretação:** há queda substancial de desempenho no conjunto independente. Isso sugere dificuldade de generalização e/ou diferenças na composição e nas anotações entre splits, mas o log não permite apontar uma causa única. Recall de 35,7% não é adequado para considerar busca operacional confiável.
+- O benchmark test-dev já foi consultado; evitar otimizá-lo repetidamente e depois alegar que continua independente da seleção de hiperparâmetros.
+
+### Próximas ações
+
+1. Investigar qualitativamente falsos negativos, caixas sobre áreas ignoradas e erros de anotação; considerar distribuição de tamanhos de pessoas por split.
+2. Criar um conjunto **novo e externo ao VisDrone** com imagens de vegetação e terrenos semelhantes ao uso pretendido, com rótulos revisados. Reservar uma parte intocada para a avaliação final.
+3. Comparar propostas de melhoria em validação/desenvolvimento, com versões e protocolos registrados; não usar test-dev como único guia iterativo.
+4. Executar inferência offline no Galaxy Tab S9 e medir tempo/memória antes da integração DJI. Não habilitar controle de voo automático a partir de um detector ainda experimental.
+
+Resultados informados pelo operador a partir da execução local; o assistente não executou o benchmark no dispositivo do usuário.
