@@ -178,3 +178,25 @@ yolo detect train model=yolo26n.pt data=/home/yusei/Documents/workspace/datasets
 ```
 
 Confirmar no início do treinamento **6471 imagens de treino**, **548 de validação** e aproximadamente **1618 batches/época** (batch=4). Se aparecer 26 batches/época, parar e investigar. Conferir ao final recall/mAP e exemplos negativos antes de qualquer implantação no tablet.
+
+## Primeiro treinamento especializado corrigido — concluído
+
+O operador concluiu 30 épocas de treinamento do YOLO26n para a classe única `pessoa` em 2026-11-11, com 6471 imagens de treinamento, 548 de validação e 13969 anotações na validação, `imgsz=640`, `batch=4`, CUDA na RTX 4060 Ti.
+
+- Experimento: `runs/detect/runs/ai_drone/pessoas_baseline_corrigido`.
+- Duração: `0.753 hours` (~45,2 minutos).
+- **Validação final do `best.pt`**: precisão **0,610**, recall **0,427**, mAP50 **0,476**, mAP50-95 **0,185**.
+- Última época (30/30): precisão 0,603, recall 0,428, mAP50 0,476, mAP50-95 0,185.
+- Velocidade na RTX 4060 Ti, validação final: pré-processamento 0,1 ms, inferência **1,2 ms**, pós-processamento 0,6 ms por imagem.
+- Memória GPU mostrada nas últimas épocas: **2,07 GB** (memória usada pelo processo de treino, não SSD).
+- Pesos gerados localmente: `weights/best.pt` e `weights/last.pt`, aproximadamente 5,4 MB cada.
+- Comparação orientativa com `yolo26n.pt` genérico validado no dataset de uma classe: precisão 0,463; recall 0,186; mAP50 0,175; mAP50-95 0,0629. O detector especializado apresentou melhorias, mas essa comparação não substitui avaliação independente.
+
+### Próximo passo recomendado
+
+1. Executar predições com `best.pt` em imagens do VisDrone de validação e examinar falsos positivos, pessoas pequenas, parcialmente ocultas e imagens negativas; comparar anotações de referência.
+2. Separar cenas independentes de avaliação, preferencialmente semelhantes à operação de busca aérea.
+3. Investigar estratégias para melhorar recall de pessoas pequenas, como resolução maior e modelos alternativos, **uma variável por experimento** e com custo de inferência no Galaxy Tab S9 considerado.
+4. Só então planejar exportação TFLite e integração no Android. Não usar detecção atual para voo autônomo nem busca operacional sem testes e controle humano.
+
+**Nota:** a classe única `pessoa` combina `pedestrian` e `people`; regiões ignoradas e negativos não revisados ainda podem influenciar métricas. Documentar avanços atuais neste plano e reservar `documentacao/ideias futuras/` apenas para funcionalidades adiadas.
