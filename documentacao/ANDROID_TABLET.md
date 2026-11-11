@@ -107,3 +107,14 @@ O Tab S9 em teste reportou `PAGESIZE=4096`, ou seja, pages de 4 KB. O alerta de 
 ### Limitacoes conhecidas
 
 Esta e uma **prova de conceito**. As predicoes sao feitas em snapshots do `PreviewView`, nao em um pipeline CameraX `ImageAnalysis` otimizado. O processamento `RGB float32` faz copia/alocacao por frame, e o decoder suporta somente a forma de saida acima. FPS, memoria e resultados visuais so podem ser considerados confirmados apos teste real no Tab S9. Nao usar detecoes para pilotagem automatica, salvamento de vidas ou monitoramento sem supervisao.
+
+## Incidente de exportacao LiteRT e isolamento do ambiente
+
+Em 11/11/2026, o build Android concluiu com `BUILD SUCCESSFUL` (9s no build incremental) e a instalacao no Galaxy Tab S9 concluiu com `adb install ... Success`.
+
+A primeira execucao de `python scripts/exportar_modelo_android.py --imgsz 640` **nao produziu modelo**: o Ultralytics 8.4.210 detectou falta de `litert-torch>=0.10.0` e `ai-edge-litert>=2.3.0`, instalou automaticamente 69 pacotes e substituiu `torch==2.15.0` por `torch==2.14.1` na `.venv` de treinamento. A conversao falhou na importacao `litert_torch -> torchao -> torch._inductor` com `RuntimeError: duplicate registrations for aten.miopen_batch_norm.default`. O exportador informou ser necessario reiniciar o processo depois da instalacao. **Nenhum `.tflite` resultou deste teste.**
+
+A chamada utilizada apontou ao **baseline antigo** `pessoas_960/weights/best.pt`; o modelo melhorado esta em `pessoas_960_continuacao/weights/best.pt`.
+
+Recomendacao: **nao reinstalar nem remover PyTorch na `.venv` original neste momento**, pois o treino e suas dependencias seriam afetados. Testar exportacao em processo novo no ambiente original apenas se necessario; preferir criar `.venv-export` totalmente separada e instalar Ultralytics + dependencias LiteRT ali, para evitar alteracoes adicionais no ambiente de treinamento. Conferir a forma da saida antes de importar o modelo no tablet. O melhor checkpoint so deve substituir o baseline apos verificacao experimental.
+
