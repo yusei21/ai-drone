@@ -115,7 +115,6 @@ private fun buildDetectionModelOptions(
 fun DroneCameraScreen(
     droneController: DroneCommandManager,
     onCellCameraClick: () -> Unit,
-    onOfflineAiTestClick: () -> Unit,
     onSurfaceTextureAvailable: (SurfaceTexture, Int, Int) -> Unit,
     onSurfaceTextureDestroyed: () -> Boolean,
     onBackClick: () -> Unit = {}
@@ -663,7 +662,6 @@ fun DroneCameraScreen(
                 missionExpanded = showMissionOverlay,
                 detectionEnabled = detectionEnabled,
                 onCellCameraClick = onCellCameraClick,
-                onOfflineAiTestClick = onOfflineAiTestClick,
                 onTakePhotoClick = {
                     droneController.takePhoto { success, message ->
                         val text = if (success) "Foto capturada" else "Erro ao fotografar: ${message ?: "desconhecido"}"
@@ -1093,7 +1091,6 @@ fun CameraControls(
     missionExpanded: Boolean,
     detectionEnabled: Boolean,
     onCellCameraClick: () -> Unit,
-    onOfflineAiTestClick: () -> Unit,
     onTakePhotoClick: () -> Unit,
     onRecordClick: () -> Unit,
     onStreamToggle: () -> Unit,
@@ -1128,12 +1125,6 @@ fun CameraControls(
             onClick = onCellCameraClick,
             enabled = true,
             color = buttonGray
-        )
-        CompactControlButton(
-            icon = Icons.Default.Science,
-            onClick = onOfflineAiTestClick,
-            enabled = true,
-            color = Color(0xFF00E5A0)
         )
         AiPanelButton(
             enabled = detectionEnabled,
