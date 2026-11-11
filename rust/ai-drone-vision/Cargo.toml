@@ -1,0 +1,12 @@
+[package]
+name = "ai-drone-vision"
+version = "0.1.0"
+edition = "2021"
+description = "Deterministic YOLO person-box decoding and NMS for ai-drone"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
