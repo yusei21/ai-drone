@@ -118,3 +118,12 @@ A chamada utilizada apontou ao **baseline antigo** `pessoas_960/weights/best.pt`
 
 Recomendacao: **nao reinstalar nem remover PyTorch na `.venv` original neste momento**, pois o treino e suas dependencias seriam afetados. Testar exportacao em processo novo no ambiente original apenas se necessario; preferir criar `.venv-export` totalmente separada e instalar Ultralytics + dependencias LiteRT ali, para evitar alteracoes adicionais no ambiente de treinamento. Conferir a forma da saida antes de importar o modelo no tablet. O melhor checkpoint so deve substituir o baseline apos verificacao experimental.
 
+
+## Correcao do formato NCHW LiteRT (11/11/2026)
+
+A segunda exportacao, usando `pessoas_960_continuacao/weights/best.pt`, **concluiu com sucesso** e gravou `runs/android_models/pessoas_640.tflite` com ~9,4 MiB. O validador do script, porem, recusou entrada `[1,3,640,640]` (`float32`) porque esperava exclusivamente `[1,640,640,3]` (NHWC). A saida foi `[1,5,8400]` (`float32`), compatível com o decoder experimental.
+
+Foi corrigido o `YoloInferenceEngine` para converter pixels RGB na ordem **NCHW** (todos os R, depois G, depois B) quando a entrada for `[1,3,H,W]`, mantendo suporte NHWC. O script de verificacao tambem aceita ambos os layouts. E necessario atualizar o repositorio, executar novamente o script e recompilar o APK, pois o APK instalado antes da correcao ainda nao entende NCHW.
+
+Nao ha confirmacao de compatibilidade de operadores GPU, nem validacao de caixas em frames reais no Tab S9. Caso o GPU delegate falhe, deve haver tentativa de CPU.
+
