@@ -29,8 +29,20 @@ class YoloInferenceEngine private constructor(
         val inputShape = interpreter.getInputTensor(0).shape()
         val outputShape = interpreter.getOutputTensor(0).shape()
         inputSize = inputShape.getOrNull(2) ?: DEFAULT_INPUT_SIZE
-        predictionCount = outputShape.getOrNull(2) ?: DEFAULT_PREDICTION_COUNT
-        outputDim = outputShape.getOrNull(1) ?: 5
+        require(inputShape.size == 4 && inputShape[0] == 1 && inputShape[3] == 3) {
+            "Formato de entrada nao suportado: ${inputShape.contentToString()} (esperado NHWC RGB)"
+        }
+        require(interpreter.getInputTensor(0).dataType() == org.tensorflow.lite.DataType.FLOAT32) {
+            "Entrada TFLite precisa ser FLOAT32 (exportar sem quantizacao)"
+        }
+        require(interpreter.getOutputTensor(0).dataType() == org.tensorflow.lite.DataType.FLOAT32) {
+            "Saida TFLite precisa ser FLOAT32 (exportar sem quantizacao)"
+        }
+        require(outputShape.size == 3 && outputShape[0] == 1 && outputShape[1] in 5..100) {
+            "Formato de saida nao suportado: ${outputShape.contentToString()} (esperado [1, 4+classes, N])"
+        }
+        predictionCount = outputShape[2]
+        outputDim = outputShape[1]
         Log.d(TAG, "Engine loaded: ${model.name} input=${inputShape.contentToString()} output=${outputShape.contentToString()}")
     }
 
@@ -76,7 +88,7 @@ class YoloInferenceEngine private constructor(
         val label = model.classes.firstOrNull() ?: "Objeto"
         for (index in 0 until predictionCount) {
             val confidence = output[4][index]
-            if (confidence < CONFIDENCE_THRESHOLD) continue
+            if (!confidence.isFinite() || confidence < CONFIDENCE_THRESHOLD) continue
             val rect = extractRect(output, index) ?: continue
             detections += DetectionResult(label = label, confidence = confidence, normalizedRect = rect)
         }
@@ -97,7 +109,7 @@ class YoloInferenceEngine private constructor(
                     bestClass = c
                 }
             }
-            if (bestScore < CONFIDENCE_THRESHOLD) continue
+            if (!bestScore.isFinite() || bestScore < CONFIDENCE_THRESHOLD) continue
             val rect = extractRect(output, index) ?: continue
             val label = model.classes.getOrElse(bestClass) { "Classe_$bestClass" }
             detections += DetectionResult(label = label, confidence = bestScore, normalizedRect = rect)
@@ -110,6 +122,7 @@ class YoloInferenceEngine private constructor(
         val centerY = output[1][index] / inputSize.toFloat()
         val width = output[2][index] / inputSize.toFloat()
         val height = output[3][index] / inputSize.toFloat()
+        if (!centerX.isFinite() || !centerY.isFinite() || !width.isFinite() || !height.isFinite()) return null
         if (width <= MIN_BOX_SIZE || height <= MIN_BOX_SIZE) return null
         return RectF(
             (centerX - width / 2f).coerceIn(0f, 1f),
@@ -146,7 +159,7 @@ class YoloInferenceEngine private constructor(
         private const val TAG = "YoloInferenceEngine"
         private const val DEFAULT_INPUT_SIZE = 640
         private const val DEFAULT_PREDICTION_COUNT = 8400
-        private const val CONFIDENCE_THRESHOLD = 0.25f
+        private const val CONFIDENCE_THRESHOLD = 0.27f
         private const val IOU_THRESHOLD = 0.45f
         private const val MAX_DETECTIONS = 20
         private const val MIN_BOX_SIZE = 0.005f
@@ -170,7 +183,16 @@ class YoloInferenceEngine private constructor(
                 numThreads = 4
             }
 
-            return YoloInferenceEngine(Interpreter(modelBuffer, options), gpuDelegate, model)
+            // A GPU pode aceitar o delegate, mas falhar na criacao do Interpreter
+            // por operadores nao suportados. Neste caso, tentar CPU.
+            return try {
+                YoloInferenceEngine(Interpreter(modelBuffer, options), gpuDelegate, model)
+            } catch (gpuError: Exception) {
+                Log.w(TAG, "GPU model initialization failed, retrying on CPU: ${gpuError.message}")
+                runCatching { gpuDelegate?.close() }
+                val cpuOptions = Interpreter.Options().apply { numThreads = 4 }
+                YoloInferenceEngine(Interpreter(modelBuffer, cpuOptions), null, model)
+            }
         }
 
         private fun loadFromAssets(context: Context, assetPath: String): ByteBuffer {
