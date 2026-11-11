@@ -61,8 +61,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pedro.library.view.OpenGlView
 import com.sloth.registerapp.core.observability.AppObservability
 import com.sloth.registerapp.core.settings.RtmpSettingsRepository
-import com.sloth.registerapp.features.detection.data.ml.DetectionBox
-import com.sloth.registerapp.features.detection.data.ml.PersonDetector
+import com.sloth.registerapp.features.mldetection.domain.model.DetectionResult
+import com.sloth.registerapp.features.mldetection.presentation.MLDetectionViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sloth.registerapp.features.objectdetection.data.repository.ObjectDetectionPreferencesRepository
 import com.sloth.registerapp.features.streaming.data.PhoneRtmpStreamer
 import com.sloth.registerapp.features.streaming.domain.StreamState
@@ -97,16 +98,14 @@ fun CellCameraScreen(
     val streamState by streamer.state.collectAsStateWithLifecycle()
     val pixelCopyThread = remember { HandlerThread("cell-camera-pixel-copy").apply { start() } }
     val pixelCopyHandler = remember(pixelCopyThread) { Handler(pixelCopyThread.looper) }
-    val personDetector = remember(context) {
-        runCatching {
-            if (PersonDetector.isModelAvailable(context)) PersonDetector(context) else null
-        }.getOrNull()
-    }
-
-    var detectionBoxes by remember { mutableStateOf<List<DetectionBox>>(emptyList()) }
-    var lastInferenceMs by remember { mutableStateOf<Long?>(null) }
-    var lastDetectionError by remember { mutableStateOf<String?>(null) }
-    var lastDetectionFailureReportAt by remember { mutableStateOf(0L) }
+    val mlViewModel: MLDetectionViewModel = viewModel()
+    val availableModels by mlViewModel.availableModels.collectAsStateWithLifecycle()
+    val activeModelId by mlViewModel.activeModelId.collectAsStateWithLifecycle()
+    val detectionBoxes by mlViewModel.detectionBoxes.collectAsStateWithLifecycle()
+    val lastInferenceMs by mlViewModel.lastInferenceMs.collectAsStateWithLifecycle()
+    val lastDetectionError by mlViewModel.lastError.collectAsStateWithLifecycle()
+    val detectorReady = availableModels.any { it.id == detectionModelId } &&
+        activeModelId == detectionModelId
 
     LaunchedEffect(Unit) {
         AppObservability.screenOpened("CellCameraScreen")
@@ -145,35 +144,26 @@ fun CellCameraScreen(
         openGlView.holder.addCallback(callback)
         onDispose {
             openGlView.holder.removeCallback(callback)
-            personDetector?.close()
             pixelCopyThread.quitSafely()
             streamer.release()
         }
     }
 
-    LaunchedEffect(detectionEnabledPersisted, detectionModelId, personDetector, activity) {
-        val canDetect = detectionEnabledPersisted &&
-            detectionModelId == ObjectDetectionPreferencesRepository.DEFAULT_MODEL_ID &&
-            personDetector != null &&
-            activity != null
+    LaunchedEffect(detectionModelId, availableModels) {
+        if (availableModels.any { it.id == detectionModelId } && activeModelId != detectionModelId) {
+            mlViewModel.selectModel(detectionModelId)
+        }
+    }
 
-        if (!canDetect) {
-            detectionBoxes = emptyList()
-            if (!detectionEnabledPersisted) {
-                lastDetectionError = null
-            } else if (personDetector == null) {
-                AppObservability.breadcrumb(
-                    category = "ml",
-                    message = "Cell camera detection requested without available model",
-                    level = SentryLevel.WARNING
-                )
-            }
+    LaunchedEffect(detectionEnabledPersisted, detectionModelId, detectorReady, activity) {
+        if (!detectionEnabledPersisted || !detectorReady || activity == null) {
+            mlViewModel.clearDetections()
             return@LaunchedEffect
         }
 
         AppObservability.breadcrumb(
             category = "ml",
-            message = "Cell camera object detection started",
+            message = "Cell camera ML detection started",
             data = mapOf("model_id" to detectionModelId)
         )
 
@@ -183,49 +173,17 @@ fun CellCameraScreen(
                 view = openGlView,
                 handler = pixelCopyHandler
             )
-
-            if (frameBitmap == null) {
-                detectionBoxes = emptyList()
-                lastDetectionError = "Falha ao capturar frame da camera"
-                AppObservability.breadcrumb(
-                    category = "camera",
-                    message = "Cell camera frame capture failed",
-                    level = SentryLevel.WARNING
-                )
-                delay(400)
-                continue
+            if (frameBitmap != null) {
+                // The ViewModel owns this bitmap and recycles it after inference.
+                mlViewModel.processFrame(frameBitmap)
+            } else {
+                mlViewModel.clearDetections()
             }
-
-            val inferenceStart = System.currentTimeMillis()
-            lastDetectionError = null
-            detectionBoxes = runCatching {
-                withContext(Dispatchers.Default) {
-                    personDetector.detect(frameBitmap)
-                }
-            }.getOrElse { error ->
-                lastDetectionError = error.message ?: "Falha na inferencia"
-                val now = System.currentTimeMillis()
-                if (now - lastDetectionFailureReportAt > 60_000L) {
-                    lastDetectionFailureReportAt = now
-                    AppObservability.captureException(
-                        throwable = error,
-                        area = "ml",
-                        operation = "cell_camera_person_detection",
-                        extras = mapOf(
-                            "bitmap_width" to frameBitmap.width,
-                            "bitmap_height" to frameBitmap.height
-                        )
-                    )
-                }
-                emptyList()
-            }
-            lastInferenceMs = System.currentTimeMillis() - inferenceStart
-            frameBitmap.recycle()
             delay(350)
         }
     }
 
-    val aiColor = if (detectionEnabledPersisted && personDetector != null) Color(0xFF00C2FF)
+    val aiColor = if (detectionEnabledPersisted && detectorReady) Color(0xFF00C2FF)
                   else Color.White.copy(alpha = 0.55f)
     val inferenceMs = lastInferenceMs
 
@@ -241,7 +199,7 @@ fun CellCameraScreen(
         )
 
         // Overlay de detecção
-        if (detectionEnabledPersisted && detectionModelId == ObjectDetectionPreferencesRepository.DEFAULT_MODEL_ID) {
+        if (detectionEnabledPersisted && detectorReady) {
             CellDetectionOverlay(
                 detections = detectionBoxes,
                 modifier = Modifier.fillMaxSize()
@@ -343,20 +301,17 @@ fun CellCameraScreen(
         Surface(
             onClick = {
                 val next = !detectionEnabledPersisted
-                lastDetectionError = null
-                detectionBoxes = emptyList()
-                lastInferenceMs = null
+                mlViewModel.clearDetections()
                 AppObservability.breadcrumb(
                     category = "ml",
                     message = if (next) "Cell camera detection enabled" else "Cell camera detection disabled",
                     data = mapOf("model_id" to ObjectDetectionPreferencesRepository.DEFAULT_MODEL_ID)
                 )
                 scope.launch {
-                    objectDetectionRepo.setActiveModelId(ObjectDetectionPreferencesRepository.DEFAULT_MODEL_ID)
                     objectDetectionRepo.setDetectionEnabled(next)
                 }
             },
-            enabled = personDetector != null,
+            enabled = detectorReady,
             shape = CircleShape,
             color = aiColor.copy(alpha = 0.18f),
             border = BorderStroke(1.dp, aiColor.copy(alpha = 0.55f)),
@@ -471,7 +426,7 @@ fun CellCameraScreen(
         }
 
         // Aviso se modelo não disponível
-        if (personDetector == null) {
+        if (availableModels.isEmpty()) {
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -500,7 +455,7 @@ fun CellCameraScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "person_detector.tflite não está nos assets do app.",
+                            text = "Instale um modelo .tflite em files/ml_models/ no aplicativo.",
                             color = Color.White.copy(alpha = 0.55f),
                             fontSize = 12.sp
                         )
@@ -513,7 +468,7 @@ fun CellCameraScreen(
 
 @Composable
 private fun CellDetectionOverlay(
-    detections: List<DetectionBox>,
+    detections: List<DetectionResult>,
     modifier: Modifier = Modifier
 ) {
     if (detections.isEmpty()) return
