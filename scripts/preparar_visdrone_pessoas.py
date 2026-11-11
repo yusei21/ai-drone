@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Cria uma versão de 1 classe do VisDrone convertido pelo Ultralytics.
 
-Não modifica os arquivos originais. As imagens são ligadas por symlink; as
-anotações originais permanecem intactas. Mantém as divisões train e val.
+Não modifica os arquivos originais. Usa hardlinks por imagem (ou cópias como
+fallback), para que o carregador YOLO enumere todas as imagens corretamente.
+Mantém as divisões train e val.
 
 Uso:
   python scripts/preparar_visdrone_pessoas.py
@@ -11,6 +12,7 @@ Uso:
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 from pathlib import Path
 
@@ -39,15 +41,30 @@ def prepare_split(source: Path, output: Path, split: str) -> tuple[int, int, int
     output_images.parent.mkdir(parents=True, exist_ok=True)
     output_labels.mkdir(parents=True, exist_ok=True)
 
+    # O script antigo criou symlinks de DIRETÓRIO. O glob recursivo do
+    # Ultralytics pode não percorrê-los e acabar usando só uma amostra.
+    # Substituímos apenas esse tipo de link, preservando a pasta de origem.
     if output_images.is_symlink():
         if output_images.resolve() != source_images.resolve():
-            raise ValueError(f"Symlink existente aponta para outro lugar: {output_images}")
-    elif output_images.exists():
-        raise FileExistsError(
-            f"{output_images} já existe e não é symlink. Use outra pasta de saída."
-        )
-    else:
-        output_images.symlink_to(source_images.resolve(), target_is_directory=True)
+            raise ValueError(f"Symlink aponta para outro dataset: {output_images}")
+        output_images.unlink()
+    elif output_images.exists() and not output_images.is_dir():
+        raise FileExistsError(f"Não é uma pasta: {output_images}")
+    output_images.mkdir(parents=True, exist_ok=True)
+
+    for image in image_files:
+        target = output_images / image.name
+        if target.exists():
+            if target.is_file() and target.stat().st_size == image.stat().st_size:
+                continue
+            raise FileExistsError(f"Arquivo de saída conflitante: {target}")
+        try:
+            os.link(image, target)
+        except OSError:
+            shutil.copy2(image, target)
+
+    if len([p for p in output_images.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_SUFFIXES]) != len(image_files):
+        raise RuntimeError(f"Contagem de imagens diferente para {split}")
 
     count_boxes, count_negative = 0, 0
     for image in image_files:
@@ -108,6 +125,10 @@ def main() -> None:
     )
     (output / "pessoas.yaml").write_text(yaml_content, encoding="utf-8")
     print(f"Pronto: {output / 'pessoas.yaml'}")
+    # Caches antigos do carregador podem refletir o layout com symlinks.
+    for cache in output.rglob("*.cache"):
+        if cache.is_file():
+            cache.unlink()
     print("AVISO: verifique os exemplos negativos e regiões ignoradas antes de usar operacionalmente.")
 
 
