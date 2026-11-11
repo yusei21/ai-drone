@@ -130,3 +130,19 @@ Resultado reportado:
 5. Medir recall e mAP para a classe `pessoa`, além de avaliar imagens de campo e situações negativas.
 
 Estes resultados foram informados pelo terminal do operador; o assistente não executou os scripts localmente.
+
+## Incidente: treinamento especializado de 30 épocas com conjunto incompleto
+
+O operador relatou que o treino de 30 épocas concluiu em 0,015 h (~54 s), com 26 batches por época usando batch=4 e validação sobre apenas **1 imagem / 1 instância**, em vez das 548 imagens esperadas. O `best.pt` gerado **não está validado**: mAP50=0,995 e recall=1 sobre uma única anotação não são métricas representativas. Não usar no aplicativo.
+
+**Hipótese técnica:** o script inicial criou symlinks de diretórios em `images/train` e `images/val`. Alguns mecanismos de varredura recursiva de arquivos não seguem symlinks de diretório. Como correção, `scripts/preparar_visdrone_pessoas.py` agora cria hardlinks de imagens individuais (com fallback por cópia), recria o layout local preservando origem e rótulos, e remove caches antigos sob a saída.
+
+Reexecutar depois de `git pull origin main`:
+
+```fish
+python scripts/preparar_visdrone_pessoas.py
+find /home/yusei/Documents/workspace/datasets/VisDrone-pessoas/images/train -maxdepth 1 -type f | wc -l
+find /home/yusei/Documents/workspace/datasets/VisDrone-pessoas/images/val -maxdepth 1 -type f | wc -l
+```
+
+**Valores esperados: 6471 train e 548 val.** Conferir também nas linhas de inicialização do YOLO `train: Scanning ... 6471` e `val: Scanning ... 548` antes de treinar 30 épocas novamente. Usar outro nome de experimento, por exemplo `pessoas_baseline_corrigido`, e não sobrescrever o experimento anterior. Se a contagem inicial ainda estiver errada, interromper e investigar antes do treino. Mesmo com essa correção, é necessária revisão das imagens negativas e anotações ignoradas.
