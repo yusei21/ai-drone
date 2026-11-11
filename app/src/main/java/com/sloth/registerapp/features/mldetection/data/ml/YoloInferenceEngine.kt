@@ -140,7 +140,7 @@ class YoloInferenceEngine private constructor(
                 }
             }
             if (!bestScore.isFinite() || bestScore < CONFIDENCE_THRESHOLD) continue
-            val rect = extractRect(output, index) ?: continue
+            val rect = extractRect(output, index, coordinateScale) ?: continue
             val label = model.classes.getOrElse(bestClass) { "Classe_$bestClass" }
             detections += DetectionResult(label = label, confidence = bestScore, normalizedRect = rect)
         }
