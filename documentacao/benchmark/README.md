@@ -84,3 +84,15 @@ yolo detect val \
 Verificar no log que o carregador analisou **1.610 imagens**. Anotar precisão, recall, mAP50 e mAP50-95; os valores só serão conhecidos após execução no PC. Não fazer ajustes usando esses resultados e depois tratá-los como teste final intocado.
 
 **Limitação importante:** `test-dev` verifica generalização para outras imagens do VisDrone, mas não substitui testes em vídeos reais do DJI Mavic Pro, ambientes de vegetação locais e medições no Galaxy Tab S9.
+
+## Preparação local confirmada — divisão test-dev
+
+O operador confirmou no PC a presença de **1.610 JPGs** em `VisDrone/images/test` e **1.610 arquivos TXT** em `VisDrone/labels/test`. Após executar `scripts/preparar_visdrone_pessoas.py`, o terminal registrou:
+
+| Split | Imagens | Anotações de pessoas | Imagens sem pessoas anotadas |
+| --- | ---: | ---: | ---: |
+| train | 6.471 | 106.396 | 787 |
+| val | 548 | 13.969 | 17 |
+| test | **1.610** | **27.382** | **343** |
+
+O arquivo YAML foi gerado em `/home/yusei/Documents/workspace/datasets/VisDrone-pessoas/pessoas.yaml`. **Benchmark ainda não executado** no momento deste registro. Próximo passo: rodar `yolo detect val` com `split=test`, `imgsz=960` e `pessoas_960/weights/best.pt` para obter as métricas. Conferir se o carregador efetivamente lê 1.610 imagens e registrar os resultados reais. As 343 imagens sem rótulo de pessoa podem incluir regiões ignoradas ou alvos não anotados; revisar antes de interpretar falsos positivos.
