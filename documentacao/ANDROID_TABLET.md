@@ -39,3 +39,71 @@ git pull origin main
 ```
 
 Se o comando Gradle falhar, registrar o **primeiro erro** relevante. Não instalar nem assumir que o APK está pronto até a compilação e os testes funcionais concluírem.
+
+## Implementacao do teste de IA offline (11/11/2026)
+
+Foi adicionada a atividade `OfflineAiTestActivity`, independente da conexao DJI, com:
+
+- Camera traseira local do tablet via CameraX.
+- Botao para conceder permissao de camera.
+- Botao **Importar .tflite**, usando o seletor de arquivos Android.
+- Decoder experimental de caixas `pessoa` e confianca; contagem e latencia por inferencia.
+- Thread exclusiva para LiteRT/TFLite e delegate de GPU, com tentativa de CPU se o delegate falhar.
+- Limite provisório de `conf=0.27` e captura de frame aproximadamente a cada 450 ms (nao e FPS maximo).
+- Sem login, internet, controlador DJI ou comandos de voo nessa atividade.
+
+**Como acessar:** na tela **Ao vivo** do aplicativo, tocar no novo botao de **frasco / Science (verde)**. O botao de telefone existente continua abrindo a tela anterior da camera com streaming.
+
+**Status:** codigo publicado, **ainda nao recompilado nem testado no Tab S9**. O APK de 374 MB instalado anteriormente nao possui essa tela. A tela depende da compilacao de um novo APK.
+
+### 1. Atualizar e compilar o novo APK no CachyOS (fish)
+
+```fish
+cd /home/yusei/Documents/workspace/ai-drone
+git pull origin main
+./gradlew :app:assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+Se o build falhar, enviar o **primeiro erro**, especialmente erros Kotlin relativos a CameraX, Compose ou interpretador.
+
+### 2. Exportar pesos YOLO26n no PC
+
+Apos a execucao do treinamento que estiver rodando (para evitar disputar recursos), com a venv ativa:
+
+```fish
+cd /home/yusei/Documents/workspace/ai-drone
+source .venv/bin/activate.fish
+python scripts/exportar_modelo_android.py --imgsz 640
+```
+
+O script usa inicialmente o benchmark conhecido `pessoas_960/weights/best.pt` e cria `runs/android_models/pessoas_640.tflite`. Para testar o ajuste fino depois de comparar com a validacao, passar o caminho de seu `best.pt` em `--pesos`.
+
+A exportacao usa **`format="litert"`**, atualmente recomendado pela Ultralytics (o artefato continua sendo `.tflite`), com entrada e saida `float32` e `nms=None` (saida crua). Ela pode instalar dependencias e demorar.
+
+O script **verifica explicitamente** entrada `[1,640,640,3]` e saida `[1,5,N]`. Se a versao instalada gerar formato diferente, e necessario adaptar o decoder **antes** de importar. Nao utilizar `nms=False` sem revisar o decoder, pois YOLO26 pode exportar `[1,300,6]` com caixas `xyxy`.
+
+**Importante:** nao ha modelo dentro do repositorio nem do APK. O script deve ser executado pelo usuario no PC que possui os pesos.
+
+### 3. Copiar modelo para o tablet e testar
+
+```fish
+adb push runs/android_models/pessoas_640.tflite /sdcard/Download/pessoas_640.tflite
+```
+
+No app, abrir **Ao vivo → frasco verde → Permitir camera → Importar .tflite**, selecionar o arquivo em Downloads. A selecao copia o modelo para o armazenamento privado do app e tenta carregá-lo. O app deve mostrar o nome, numero de detecções e latencia. O decoder atualmente redimensiona a imagem para um quadrado, sem `letterbox`; as caixas devem ser comparadas com uma inferencia do PC na **mesma** imagem para confirmar a geometria antes de considerar detecções confiaveis.
+
+### 4. Validacao de resultado
+
+- Compilar e abrir; verificar se a camera aparece.
+- Confirmar importacao do `.tflite` e ausencia de erro de tensor.
+- Observar caixas de pessoas e confiancas em condicoes variadas, incluindo objetos confundiveis e pessoas pequenas.
+- Medir latencia com CPU e delegate GPU, aquecimento e estabilidade ao longo de alguns minutos.
+- Verificar que a tela **nao** envia comandos DJI.
+- Anotar erros em `adb logcat`.
+
+O Tab S9 em teste reportou `PAGESIZE=4096`, ou seja, pages de 4 KB. O alerta de alinhamento 16 KB e uma verificacao separada do funcionamento atual desta tela. A tela de video DJI sem drone mostrou `Service Not Connected`, esperado quando nao ha aeronave conectada; nao comprova falha do SDK.
+
+### Limitacoes conhecidas
+
+Esta e uma **prova de conceito**. As predicoes sao feitas em snapshots do `PreviewView`, nao em um pipeline CameraX `ImageAnalysis` otimizado. O processamento `RGB float32` faz copia/alocacao por frame, e o decoder suporta somente a forma de saida acima. FPS, memoria e resultados visuais so podem ser considerados confirmados apos teste real no Tab S9. Nao usar detecoes para pilotagem automatica, salvamento de vidas ou monitoramento sem supervisao.
