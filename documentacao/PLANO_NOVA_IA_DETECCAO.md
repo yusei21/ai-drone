@@ -224,3 +224,27 @@ Pasta local do teste: `runs/detect/runs/ai_drone/validacao_pessoas_960`.
 - Próximo experimento sugerido: avaliar um treino em 960 px, mantendo YOLO26n e o mesmo split, com configuração de `batch` adequada aos 8 GB de VRAM. Comparar desempenho com o mesmo protocolo de validação (ambos os modelos avaliados com `imgsz=960`).
 - Considerar também modelo maior como experimento separado; não alterar arquitetura e resolução simultaneamente no primeiro teste.
 - Revisar falsos negativos, áreas ignoradas e cenas independentes antes de declarar prontidão.
+
+## Segundo treinamento especializado — YOLO26n com 960 px concluído
+
+O operador executou `yolo detect train` com `model=yolo26n.pt`, `imgsz=960`, `epochs=30`, `batch=4`, `device=0` e o dataset `VisDrone-pessoas/pessoas.yaml`.
+
+**Resultados da validação final do best.pt**, sobre 548 imagens e 13.969 anotações de pessoas:
+- Precisão: **0,706**.
+- Recall: **0,532**.
+- mAP50: **0,608**.
+- mAP50-95: **0,262**.
+- 30 épocas, **0,858 h** (~51,5 minutos); `GPU_mem` nas últimas épocas ~**3,2 GB**.
+- Inferência de validação na RTX 4060 Ti: pré-processamento **0,2 ms**, inferência **1,5 ms**, pós-processamento **0,6 ms** por imagem. Estes tempos variam entre execuções; medir novamente em protocolo idêntico e no tablet.
+- Pesos locais em `runs/detect/runs/ai_drone/pessoas_960/weights/best.pt` e `last.pt` (~5,5 MB cada).
+
+### Comparação entre modelos com avaliação a 960 px
+
+| Métrica | YOLO26n treinado em 640 px (inferência a 960) | YOLO26n treinado em 960 px (inferência a 960) | Ganho |
+| --- | ---: | ---: | ---: |
+| Precisão | 0,666 | 0,706 | +4,0 p.p. |
+| Recall | 0,501 | 0,532 | +3,1 p.p. |
+| mAP50 | 0,566 | 0,608 | +4,2 p.p. |
+| mAP50-95 | 0,237 | 0,262 | +2,5 p.p. |
+
+**Decisão técnica:** o modelo de 960 px é o melhor baseline registrado até agora. Ainda assim, recall de 53,2% é insuficiente para busca autônoma/operacional. Antes de aumentar arquitetura ou integrar com Android, testar o novo `best.pt` visualmente, quantificar falsos positivos/negativos em imagens independentes e avaliar riscos de imagens com alvos não anotados ou regiões ignoradas. É possível fazer inferência a 640/960 com o novo peso para medir trade-offs. Manter `documentacao/ideias futuras/` para funcionalidades adiadas; avanços atuais permanecem neste plano.
