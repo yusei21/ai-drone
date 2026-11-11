@@ -110,3 +110,23 @@ yolo detect train model=yolo26n.pt data=/home/yusei/Documents/workspace/datasets
 ```
 
 Usar `yolo26n` como primeiro baseline especializado antes de investir em modelos maiores. Validar mAP, recall, falsos alarmes e resultados em cenas independentes. Não usar o novo modelo para guiar voos automaticamente sem validação física e controles de segurança.
+
+## Conversão do VisDrone para detecção de pessoas — concluída localmente
+
+O operador executou `python scripts/preparar_visdrone_pessoas.py` com sucesso após atualizar o repositório até `af75f5f`.
+
+Resultado reportado:
+- Treino: **6.471 imagens**, **106.396 anotações de pessoas**, **787 imagens sem pessoas anotadas**.
+- Validação: **548 imagens**, **13.969 anotações de pessoas**, **17 imagens sem pessoas anotadas**.
+- Total: **7.019 imagens**, **120.365 anotações de pessoas**, **804 imagens sem pessoas anotadas**.
+- Saída: `/home/yusei/Documents/workspace/datasets/VisDrone-pessoas/pessoas.yaml`.
+- Classes `pedestrian` e `people` foram remapeadas para `pessoa`, preservando a base original.
+
+### Verificação antes do próximo treinamento
+1. Examinar amostras com muitas pessoas, pessoas pequenas e arquivos de rótulos vazios; não presumir que todas as imagens com rótulos vazios estejam de fato sem pessoas.
+2. Considerar as regiões ignoradas do VisDrone e os objetos excluídos do remapeamento; evitar penalizar previsões sobre alvos não anotados.
+3. Manter treino e validação independentes e auditar a distribuição de classes.
+4. Executar primeiro um treino especializado de referência com YOLO26n, 640 px, batch inicial 4 e 30 épocas, após revisão dos rótulos.
+5. Medir recall e mAP para a classe `pessoa`, além de avaliar imagens de campo e situações negativas.
+
+Estes resultados foram informados pelo terminal do operador; o assistente não executou os scripts localmente.
