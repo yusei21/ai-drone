@@ -332,7 +332,7 @@ fun CellCameraScreen(
 
         // Badge de status da IA (quando ligada)
         AnimatedVisibility(
-            visible = detectionEnabledPersisted && personDetector != null,
+            visible = detectionEnabledPersisted && detectorReady,
             enter = fadeIn() + slideInVertically { -it / 3 },
             exit = fadeOut() + slideOutVertically { -it / 3 },
             modifier = Modifier
