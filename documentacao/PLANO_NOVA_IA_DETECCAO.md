@@ -65,3 +65,14 @@ Remover o detector legado **não** remove o reconhecimento facial, pois é um m�
 **Interpretação:** é um teste de funcionamento bem-sucedido do pipeline CUDA/dataset. A detecção de pessoas ainda apresenta recall insuficiente para uso operacional. Não remover outras funcionalidades do aplicativo durante o desenvolvimento.
 
 **Próximas ações:** criar dataset de uma classe `pessoa` com remapeamento de `pedestrian` e `people`, avaliar divisões e anotações; treinar baseline mais longo, comparar modelos com métricas e analisar falsos negativos. Não usar a IA para comandar voo autônomo sem validação rigorosa.
+
+## Teste de predição visual realizado no PC
+
+O operador confirmou que o comando `yolo detect predict` processou completamente as 548 imagens de validação do VisDrone com o modelo experimental `runs/detect/runs/ai_drone/teste_cuda/weights/best.pt`.
+
+- Inferência média reportada no log: 6,1 ms/imagem, pré-processamento 0,9 ms e pós-processamento 0,8 ms, no PC RTX 4060 Ti.
+- As imagens anotadas foram salvas em `runs/detect/predict/`, na máquina local.
+- O log inclui detecções das classes `pedestrian`, `people`, `car` etc. Os números indicam predições, **não** confirmam sua correção.
+- O desempenho medido no PC não representa a velocidade no tablet Galaxy Tab S9.
+- Próximo passo: revisar visualmente uma amostra diversificada, quantificar falsos positivos e negativos e montar um dataset específico para pessoas. Manter o conjunto de validação separado do treino.
+- A documentação foi atualizada no GitHub; resultados de predição locais não foram enviados para o repositório.
