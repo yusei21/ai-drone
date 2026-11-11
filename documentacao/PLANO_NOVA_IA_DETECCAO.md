@@ -26,14 +26,12 @@ Foi iniciado localmente pelo operador o teste de 3 épocas com:
 ```fish
 yolo detect train model=yolo26n.pt data=VisDrone.yaml epochs=3 imgsz=640 batch=4 device=0 workers=4 project=runs/ai_drone name=teste_cuda
 ```
-O log recebido demonstra que CUDA foi reconhecido e o download do VisDrone começou (captura mostrava 60%). **Não há confirmação de que o download nem o treinamento terminaram.**
+O usuário confirmou a conclusão do treinamento e da validação das três épocas, com pesos best.pt e last.pt gravados.
 
-No log, o Ultralytics resolveu `save_dir` para:
-`runs/detect/runs/ai_drone/teste_cuda`
-Verifique o caminho no log final; não assuma que os pesos foram criados.
+O Ultralytics salvou os resultados e pesos em `runs/detect/runs/ai_drone/teste_cuda/`. A validação final foi executada. Os pesos não foram enviados ao GitHub.
 
 ## Etapas propostas
-1. Concluir o teste de 3 épocas e guardar métricas, erros e tempos de treino; verificar uso de VRAM.
+1. **Concluído:** teste de 3 épocas, captura das métricas e do consumo de VRAM.
 2. Preparar uma variante do VisDrone para detectar pessoas (classes `pedestrian` e `people` remapeadas conforme o alvo), mantendo separação por cenas e preservando conjuntos de validação/teste.
 3. Treinar YOLO26n como baseline e avaliar YOLO26s / YOLO11s nas mesmas condições, adaptando `batch` para 8 GB VRAM.
 4. Avaliar mAP50, mAP50-95, recall de pessoas pequenas e falsos positivos; testar com vídeos aéreos não usados no treino.
@@ -49,4 +47,21 @@ Verifique o caminho no log final; não assuma que os pesos foram criados.
 - Após uma alteração remota, atualizar a cópia local com `git pull` quando não houver alterações locais conflitantes.
 
 ## Limites desta etapa
-Remover o detector legado **não** remove o reconhecimento facial, pois é um módulo distinto. Não houve execução de compilação Gradle ou teste físico pelo assistente. O sucesso do primeiro treinamento continua pendente do log final do PC.
+Remover o detector legado **não** remove o reconhecimento facial, pois é um módulo distinto. Não houve execução de compilação Gradle ou teste físico pelo assistente. O primeiro treinamento de teste foi concluído, mas os modelos continuam experimentais e não validados no Android.
+
+## Resultado do primeiro treinamento local (log informado pelo operador)
+
+- Modelo: YOLO26n, VisDrone com 10 classes, 3 épocas, `imgsz=640`, `batch=4`, CUDA na RTX 4060 Ti 8 GB.
+- Dataset: 6.471 imagens de treino; 548 de validação, 38.759 instâncias na validação.
+- Duração: 0,079 h (~4 min 44 s); épocas de aproximadamente 1min30s.
+- Uso de memória GPU mostrado durante as épocas: ~1,3 GB (não equivale ao pico total de VRAM).
+- Geral: precisão 0,296; recall 0,235; mAP50 0,194; mAP50-95 0,104.
+- `pedestrian`: precisão 0,234; recall 0,357; mAP50 0,221; mAP50-95 0,0832.
+- `people`: precisão 0,410; recall 0,170; mAP50 0,165; mAP50-95 0,0461.
+- Inferência reportada: 1,2 ms/imagem na GPU do PC (não extrapolar para Tab S9).
+- Aviso de dataset: até 902 objetos por imagem; o Ultralytics elevou automaticamente `max_det` para 902. Aviso de `_POSIX_C_SOURCE` sem falha fatal.
+- Arquivos produzidos localmente: `runs/detect/runs/ai_drone/teste_cuda/weights/best.pt` e `last.pt`.
+
+**Interpretação:** é um teste de funcionamento bem-sucedido do pipeline CUDA/dataset. A detecção de pessoas ainda apresenta recall insuficiente para uso operacional. Não remover outras funcionalidades do aplicativo durante o desenvolvimento.
+
+**Próximas ações:** criar dataset de uma classe `pessoa` com remapeamento de `pedestrian` e `people`, avaliar divisões e anotações; treinar baseline mais longo, comparar modelos com métricas e analisar falsos negativos. Não usar a IA para comandar voo autônomo sem validação rigorosa.
