@@ -84,3 +84,29 @@ O operador confirmou que o comando `yolo detect predict` processou completamente
 - O resultado demonstra que o pipeline visual desenha caixas, mas **não comprova acurácia nem o número de pessoas realmente presentes**; comparar com as anotações originais e inspecionar falsos negativos.
 - Próxima fase: mapear categorias VisDrone `pedestrian` (0) e `people` (1) para classe única `pessoa` (0), excluindo as caixas de outras categorias. Tratar regiões ignoradas do dataset e possíveis pessoas ambíguas com cuidado, para não gerar rótulos incorretos.
 - Separar treino e validação originais; preservar as imagens sem pessoas como negativas quando apropriado, sem vazamento entre splits.
+
+## Preparação do dataset especializado (script adicionado ao GitHub)
+
+Arquivo: `scripts/preparar_visdrone_pessoas.py`.
+
+O script converte os rótulos YOLO do VisDrone que já foi baixado pelo Ultralytics, fazendo `pedestrian` (classe 0) e `people` (classe 1) virarem uma só classe `pessoa` (0). Os rótulos das outras classes não são mantidos. O script cria uma pasta nova de anotações, usa links simbólicos para imagens originais e preserva os splits `train`/`val`. Não mexe nos arquivos do dataset original.
+
+Comandos sugeridos no Fish:
+
+```fish
+cd /home/yusei/Documents/workspace/ai-drone
+git pull origin main
+python scripts/preparar_visdrone_pessoas.py
+```
+
+Saída YAML esperada: `/home/yusei/Documents/workspace/datasets/VisDrone-pessoas/pessoas.yaml`.
+
+Antes de treinar é necessário inspecionar exemplos com caixas: classes excluídas (ex.: motos) e regiões ignoradas podem conter pessoas não rotuladas, o que pode gerar falsos negativos e prejudicar a IA. O novo dataset **não é adequado para uma aplicação operacional sem revisão e testes adicionais**.
+
+Após a revisão, experimento inicial sugerido (não executado pelo assistente):
+
+```fish
+yolo detect train model=yolo26n.pt data=/home/yusei/Documents/workspace/datasets/VisDrone-pessoas/pessoas.yaml epochs=30 imgsz=640 batch=4 device=0 workers=4 project=runs/ai_drone name=pessoas_baseline
+```
+
+Usar `yolo26n` como primeiro baseline especializado antes de investir em modelos maiores. Validar mAP, recall, falsos alarmes e resultados em cenas independentes. Não usar o novo modelo para guiar voos automaticamente sem validação física e controles de segurança.
