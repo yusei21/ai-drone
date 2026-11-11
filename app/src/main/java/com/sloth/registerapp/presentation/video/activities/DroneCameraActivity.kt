@@ -1,7 +1,6 @@
 package com.sloth.registerapp.presentation.video.activities
 
 import android.os.Bundle
-import android.content.Intent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -31,7 +30,6 @@ class DroneCameraActivity : ComponentActivity() {
                     DroneCameraScreen(
                         droneController = remember { com.sloth.registerapp.features.mission.data.drone.manager.DroneCommandManager() },
                         onCellCameraClick = { showCellCamera = true },
-                        onOfflineAiTestClick = { startActivity(Intent(this, OfflineAiTestActivity::class.java)) },
                         onSurfaceTextureAvailable = { _, _, _ -> /* TODO: bind texture to DJI feed */ },
                         onSurfaceTextureDestroyed = { false },
                         onBackClick = { finish() }
