@@ -162,3 +162,19 @@ yolo detect val model=yolo26n.pt data=/home/yusei/Documents/workspace/datasets/V
 ```
 
 Checar se a inicialização/saída mostra 548 imagens de validação e um número de instâncias plausível próximo às 13969 anotações (possíveis diferenças por filtros do carregador). **As métricas de detecção deste comando não servem para escolher a nova IA**: usa pesos genéricos de dez classes em conjunto de uma classe e pode haver incompatibilidade de índices. O objetivo é conferir apenas o carregamento. Se a contagem estiver correta, proceder com treino especializado de novo nome `pessoas_baseline_corrigido`, nunca usar o modelo anterior validado com uma imagem.
+
+## Validação corrigida do conjunto completo — confirmada
+
+O operador executou `yolo detect val` com `yolo26n.pt` e o arquivo `VisDrone-pessoas/pessoas.yaml`. O carregador varreu corretamente **548/548 imagens de validação e 13.969 instâncias**, confirmando que o problema anterior de carregamento foi resolvido para a divisão de validação.
+
+- Precisão 0,463; recall 0,186; mAP50 0,175; mAP50-95 0,0629.
+- Inferência GPU PC: 1,6 ms por imagem (pré-processamento 0,2 ms, pós-processamento 0,7 ms).
+- Essas métricas são do modelo genérico `yolo26n.pt` sobre a classe remapeada e **não validam o detector especializado**.
+
+### Próximo treinamento — não executado pelo assistente
+
+```fish
+yolo detect train model=yolo26n.pt data=/home/yusei/Documents/workspace/datasets/VisDrone-pessoas/pessoas.yaml epochs=30 imgsz=640 batch=4 device=0 workers=4 project=runs/ai_drone name=pessoas_baseline_corrigido
+```
+
+Confirmar no início do treinamento **6471 imagens de treino**, **548 de validação** e aproximadamente **1618 batches/época** (batch=4). Se aparecer 26 batches/época, parar e investigar. Conferir ao final recall/mAP e exemplos negativos antes de qualquer implantação no tablet.
