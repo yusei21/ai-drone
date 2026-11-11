@@ -3,7 +3,7 @@
 
 Não modifica os arquivos originais. Usa hardlinks por imagem (ou cópias como
 fallback), para que o carregador YOLO enumere todas as imagens corretamente.
-Mantém as divisões train e val.
+Mantém as divisões train, val e test (se presente).
 
 Uso:
   python scripts/preparar_visdrone_pessoas.py
@@ -111,15 +111,25 @@ def main() -> None:
         raise FileNotFoundError(f"Dataset não encontrado: {source}")
     output.mkdir(parents=True, exist_ok=True)
 
-    for split in ("train", "val"):
+    splits = ["train", "val"]
+    test_available = (source / "images" / "test").is_dir() and (source / "labels" / "test").is_dir()
+    if test_available:
+        splits.append("test")
+    else:
+        print("AVISO: split test não encontrado em images/test e labels/test; benchmark independente ainda não disponível.")
+
+    for split in splits:
         images, boxes, negatives = prepare_split(source, output, split)
         print(f"{split}: {images} imagens, {boxes} pessoas, {negatives} imagens sem pessoas.")
+        if split == "test" and images != 1610:
+            print(f"AVISO: test contém {images} imagens; o test-dev oficial tem 1610.")
 
     yaml_content = (
         f"path: {output.as_posix()}\n"
         "train: images/train\n"
         "val: images/val\n"
-        "names:\n"
+        + ("test: images/test\n" if test_available else "")
+        + "names:\n"
         "  0: pessoa\n"
         "nc: 1\n"
     )
