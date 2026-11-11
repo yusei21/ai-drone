@@ -42,7 +42,7 @@ class ObjectDetectionPreferencesRepository private constructor(
     }
 
     companion object {
-        const val DEFAULT_MODEL_ID = "person-detector"
+        const val DEFAULT_MODEL_ID = ""
 
         @Volatile
         private var INSTANCE: ObjectDetectionPreferencesRepository? = null

@@ -17,7 +17,6 @@ import java.io.File
  * Maintains a live catalog of available YOLO TFLite models.
  *
  * Sources:
- * - **Assets**: hard-coded models shipped with the APK (e.g. person_detector.tflite)
  * - **Local files**: any .tflite dropped into [modelsDir] (`filesDir/ml_models/`)
  *   accompanied by an optional .txt file with one class label per line.
  *
@@ -58,34 +57,9 @@ class ModelRegistry(private val context: Context) {
 
     private fun buildCatalog(): List<MLModel> {
         val catalog = mutableListOf<MLModel>()
-        catalog += scanAssets()
         catalog += scanLocalFiles()
         Log.d(TAG, "Catalog rebuilt: ${catalog.size} model(s)")
         return catalog
-    }
-
-    private fun scanAssets(): List<MLModel> {
-        val known = listOf(
-            AssetModelDef(
-                id = "person-detector",
-                name = "Person Detector",
-                assetPath = "person_detector.tflite",
-                classes = listOf("Pessoa")
-            ),
-        )
-        return known.mapNotNull { def ->
-            val exists = runCatching { context.assets.open(def.assetPath).close(); true }.getOrDefault(false)
-            if (!exists) return@mapNotNull null
-            val size = runCatching { context.assets.openFd(def.assetPath).declaredLength }.getOrDefault(0L)
-            MLModel(
-                id = def.id,
-                name = def.name,
-                classes = def.classes,
-                filePath = def.assetPath,
-                source = MLModelSource.ASSET,
-                sizeBytes = size
-            )
-        }
     }
 
     private fun scanLocalFiles(): List<MLModel> {
@@ -117,13 +91,6 @@ class ModelRegistry(private val context: Context) {
             sizeBytes = file.length()
         )
     }
-
-    private data class AssetModelDef(
-        val id: String,
-        val name: String,
-        val assetPath: String,
-        val classes: List<String>
-    )
 
     companion object {
         private const val TAG = "ModelRegistry"

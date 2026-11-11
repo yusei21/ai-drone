@@ -38,3 +38,15 @@ build/
 
 # Sentry Config File
 sentry.properties
+
+# IA: arquivos locais de treinamento e ambientes
+.venv/
+/runs/
+/datasets/
+*.pt
+*.onnx
+
+# Documentacao do projeto (versionar Markdown)
+!documentacao/
+!documentacao/**/
+!documentacao/**/*.md
