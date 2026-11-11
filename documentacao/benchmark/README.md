@@ -124,3 +124,21 @@ Conjunto: **1.610 imagens** e **27.382 anotações de pessoas** do VisDrone test
 4. Executar inferência offline no Galaxy Tab S9 e medir tempo/memória antes da integração DJI. Não habilitar controle de voo automático a partir de um detector ainda experimental.
 
 Resultados informados pelo operador a partir da execução local; o assistente não executou o benchmark no dispositivo do usuário.
+
+## Experimento adicional: conf=0.10 no test-dev
+
+O operador executou `yolo detect val` com `pessoas_960/weights/best.pt`, `split=test`, `imgsz=960`, `batch=4` e `conf=0.10`. O dataset completo de 1.610 imagens / 27.382 anotações foi carregado, e o limite `max_det` foi ajustado automaticamente para 376.
+
+| Métrica do avaliador | Benchmark anterior (conf padrão de val) | conf=0.10 |
+| --- | ---: | ---: |
+| Precisão resumida | 0,572 | 0,572 |
+| Recall resumido | 0,357 | 0,357 |
+| mAP50 | 0,378 | 0,352 |
+| mAP50-95 | 0,148 | 0,140 |
+| Inferência GPU na validação | 2,4 ms | 2,4 ms |
+
+Resultados locais do experimento `conf=0.10`: `runs/detect/runs/ai_drone/benchmark_conf_010`.
+
+**Interpretação:** a alteração do limiar não demonstrou melhoria nas métricas de avaliação; P/R exibidos pelo avaliador não são necessariamente precisão/recall operacional no limiar `conf=0.10`. A redução de mAP pode resultar de eliminar detecções de baixa confiança usadas nas curvas. Não usar o split test-dev para ajustar continuamente o limiar: escolher o limiar na validação/desenvolvimento e, quando possível, testar em dados externos intocados.
+
+**Próxima ação recomendada:** inspecionar curvas `F1_curve.png`, `P_curve.png`, `R_curve.png` e `PR_curve.png` geradas pela validação (`runs/detect/runs/ai_drone/pessoas_960`) para identificar a troca entre recall e falsos alarmes. Para um limiar fixo, calcular explicitamente TP/FP/FN com o mesmo protocolo de correspondência por IoU, preferencialmente em `val`. Registrar critérios por cenário; não assumir um percentual único de confiança ideal.
