@@ -91,7 +91,8 @@ private fun OfflineAiTestScreen(onClose: () -> Unit) {
         }
     }
     // TFLite GPU delegate must be created and used on the same thread.
-    val inferenceDispatcher = remember { Executors.newSingleThreadExecutor().asCoroutineDispatcher() }
+    val inferenceExecutor = remember { Executors.newSingleThreadExecutor() }
+    val inferenceDispatcher = remember(inferenceExecutor) { inferenceExecutor.asCoroutineDispatcher() }
     val inferenceMutex = remember { Mutex() }
     var engine by remember { mutableStateOf<YoloInferenceEngine?>(null) }
     var modelName by remember { mutableStateOf<String?>(null) }
@@ -139,11 +140,11 @@ private fun OfflineAiTestScreen(onClose: () -> Unit) {
         }
     }
 
-    DisposableEffect(inferenceDispatcher) {
+    DisposableEffect(inferenceExecutor) {
         onDispose {
-            // Activity finishing: stop work before disposing the delegate/dispatcher.
-            scope.launch(inferenceDispatcher) { engine?.close() }
-            // Dispatcher is intentionally not closed before the queued cleanup runs.
+            // Queue cleanup on the same thread used to create the GPU delegate.
+            inferenceExecutor.execute { engine?.close() }
+            inferenceExecutor.shutdown()
         }
     }
 
