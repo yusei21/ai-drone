@@ -76,3 +76,11 @@ O operador confirmou que o comando `yolo detect predict` processou completamente
 - O desempenho medido no PC não representa a velocidade no tablet Galaxy Tab S9.
 - Próximo passo: revisar visualmente uma amostra diversificada, quantificar falsos positivos e negativos e montar um dataset específico para pessoas. Manter o conjunto de validação separado do treino.
 - A documentação foi atualizada no GitHub; resultados de predição locais não foram enviados para o repositório.
+
+## Revisão visual preliminar (captura enviada pelo operador)
+
+- O usuário abriu a pasta local `runs/detect/predict/` no VS Code e mostrou uma predição da imagem `0000001_03999_d_0000007.jpg`.
+- A imagem urbana aérea mostra caixas `pedestrian` e outros rótulos (`car`, `motor`). Algumas detecções de pessoas exibem confiança em torno de 0,30–0,44.
+- O resultado demonstra que o pipeline visual desenha caixas, mas **não comprova acurácia nem o número de pessoas realmente presentes**; comparar com as anotações originais e inspecionar falsos negativos.
+- Próxima fase: mapear categorias VisDrone `pedestrian` (0) e `people` (1) para classe única `pessoa` (0), excluindo as caixas de outras categorias. Tratar regiões ignoradas do dataset e possíveis pessoas ambíguas com cuidado, para não gerar rótulos incorretos.
+- Separar treino e validação originais; preservar as imagens sem pessoas como negativas quando apropriado, sem vazamento entre splits.
