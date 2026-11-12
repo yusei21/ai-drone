@@ -14,27 +14,27 @@ val DarkColorScheme = darkColorScheme(
 
     // Primária (ciano neural)
     primary           = NeuralColors.Primary,
-    onPrimary         = Color.White,
-    primaryContainer  = Color(0xFF003A50),
+    onPrimary         = NeuralColors.Bg,
+    primaryContainer  = NeuralColors.SurfaceAlt,
     onPrimaryContainer = NeuralColors.TextPrimary,
 
     // Secundária (verde — sucesso)
     secondary         = NeuralColors.Success,
     onSecondary       = NeuralColors.Bg,
-    secondaryContainer = Color(0xFF003D28),
-    onSecondaryContainer = Color(0xFFDCFCE7),
+    secondaryContainer = NeuralColors.SurfaceAlt,
+    onSecondaryContainer = NeuralColors.TextPrimary,
 
     // Terciária (âmbar — aviso)
     tertiary          = NeuralColors.Warning,
     onTertiary        = NeuralColors.Bg,
-    tertiaryContainer = Color(0xFF4A3000),
-    onTertiaryContainer = Color(0xFFFFEDD5),
+    tertiaryContainer = NeuralColors.SurfaceAlt,
+    onTertiaryContainer = NeuralColors.TextPrimary,
 
     // Erro / Perigo
     error             = NeuralColors.Danger,
     onError           = Color.White,
-    errorContainer    = Color(0xFF4A001A),
-    onErrorContainer  = Color(0xFFFFCDD8),
+    errorContainer    = NeuralColors.SurfaceAlt,
+    onErrorContainer  = NeuralColors.TextPrimary,
 
     // Superfícies
     surface           = NeuralColors.Surface,
