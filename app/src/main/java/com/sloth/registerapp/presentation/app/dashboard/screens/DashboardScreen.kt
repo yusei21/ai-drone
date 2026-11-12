@@ -104,102 +104,237 @@ fun DashboardScreen(
     onShowAllDronesClick: () -> Unit = {},
     onWeatherClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
-    onRefreshStatusClick: () -> Unit = {}
+    onRefreshStatusClick: () -> Unit = {},
+    onOpenCameraClick: () -> Unit = {},
+    onMissionsClick: () -> Unit = {},
+    onReportsClick: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val scrollState = rememberScrollState()
-    val drones = remember { featuredCompatibleDrones() }
-    val statusUi = remember(droneStatus) { dashboardStatus(droneStatus) }
-    var visible by remember { mutableStateOf(false) }
-    val pulse = rememberInfiniteTransition(label = "dashboard_pulse")
-    val pulseAlpha by pulse.animateFloat(
-        initialValue = 0.10f,
-        targetValue = 0.24f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulse_alpha"
-    )
-
-    LaunchedEffect(Unit) {
-        visible = true
-    }
-
-    Box(
+    val status = droneStatus.ifBlank { "Desconectado" }
+    val connected = status.contains("conectad", ignoreCase = true) &&
+        !status.contains("desconect", ignoreCase = true)
+    val border = RoundedCornerShape(12.dp)
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(NeuralBg)
+            .verticalScroll(rememberScrollState())
+            .statusBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-        // Clean operational home; no simulated radar animation behind content.
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            DashboardTopBar(
-                onSettingsClick = onSettingsClick,
-                pulseAlpha = pulseAlpha
-            )
-
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(tween(600)) + slideInVertically(initialOffsetY = { it / 5 }, animationSpec = tween(700))
+            Column(modifier = Modifier.weight(1f)) {
+                Text("ai-drone", color = Color.White, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "ESPAÇO DE OPERAÇÃO",
+                    color = NeuralMuted,
+                    fontSize = 10.sp,
+                    letterSpacing = 1.2.sp
+                )
+            }
+            Surface(
+                onClick = onSettingsClick,
+                color = NeuralSurface,
+                shape = RoundedCornerShape(10.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, NeuralBorder)
             ) {
-                Column {
-                    HeroBanner(
-                        userName = userName,
-                        isLoggedIn = isLoggedIn
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Settings, contentDescription = null, tint = Color.White, modifier = Modifier.size(17.dp))
+                    Text("Ajustes", color = Color.White, fontSize = 12.sp)
+                }
+            }
+        }
+
+        Text(
+            "Visão geral",
+            color = Color.White,
+            fontSize = 31.sp,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            "Acompanhe o equipamento e abra a câmera para começar.",
+            color = NeuralMuted,
+            fontSize = 14.sp,
+            lineHeight = 21.sp
+        )
+
+        Surface(
+            color = NeuralSurface,
+            shape = border,
+            border = androidx.compose.foundation.BorderStroke(1.dp, NeuralBorder)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.size(8.dp).background(
+                            if (connected) NeuralSuccess else NeuralWarning, CircleShape
+                        )
                     )
-
-                    Column(
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        verticalArrangement = Arrangement.spacedBy(28.dp)
+                    Text(
+                        if (connected) "Aeronave conectada" else "Aguardando conexão DJI",
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Text(
+                    "Status do SDK: $status",
+                    color = NeuralMuted,
+                    fontSize = 12.sp
+                )
+                Surface(
+                    onClick = onOpenCameraClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.White,
+                    shape = RoundedCornerShape(9.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 17.dp, vertical = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        ConnectionStatusCard(
-                            statusUi = statusUi,
-                            isRefreshing = false,
-                            onRefreshStatusClick = onRefreshStatusClick
+                        Icon(
+                            Icons.Default.AirplanemodeActive,
+                            contentDescription = null,
+                            tint = NeuralBg,
+                            modifier = Modifier.size(21.dp)
                         )
+                        Text(
+                            "Abrir câmera DJI",
+                            modifier = Modifier.weight(1f),
+                            color = NeuralBg,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Icon(
+                            Icons.Default.ArrowForward,
+                            contentDescription = null,
+                            tint = NeuralBg,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+                }
+                Text(
+                    if (connected) "Vídeo e detecção são iniciados na tela da câmera."
+                    else "É possível abrir a câmera; o vídeo exige conexão com o drone.",
+                    color = NeuralMuted,
+                    fontSize = 11.sp
+                )
+            }
+        }
 
-                        SectionTitle(
-                            title = "Aeronaves compatíveis",
-                            icon = Icons.Default.AirplanemodeActive,
-                            actionLabel = "Lista completa",
-                            onActionClick = onShowAllDronesClick
-                        )
-                        DroneCarousel(
-                            drones = drones,
-                            onDroneClick = { drone ->
-                                Log.d(DASHBOARD_TAG, "Mock do site oficial para ${drone.name}: ${drone.officialUrl}")
-                                Toast.makeText(
-                                    context,
-                                    "Informações: ${drone.name}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            OperationalQuickLink(
+                title = "Missões",
+                subtitle = "Rotas e execução",
+                onClick = onMissionsClick,
+                modifier = Modifier.weight(1f)
+            )
+            OperationalQuickLink(
+                title = "Relatórios",
+                subtitle = "Histórico real",
+                onClick = onReportsClick,
+                modifier = Modifier.weight(1f)
+            )
+        }
 
-                        SectionTitle(
-                            title = "Apoio institucional",
-                            icon = Icons.Default.Business
-                        )
-                        InstitutionalSupportGrid()
-
-                        SectionTitle(
-                            title = "Sobre o projeto",
-                            icon = Icons.Default.Info,
-                            actionLabel = "Clima",
-                            onActionClick = onWeatherClick
-                        )
-                        ProjectDescriptionCard()
-
-                        Spacer(modifier = Modifier.height(14.dp))
+        Text(
+            "SISTEMA",
+            color = NeuralMuted,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 1.2.sp
+        )
+        Surface(
+            color = NeuralSurface,
+            shape = border,
+            border = androidx.compose.foundation.BorderStroke(1.dp, NeuralBorder)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(17.dp),
+                verticalArrangement = Arrangement.spacedBy(13.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Detecção de pessoas", modifier = Modifier.weight(1f), color = Color.White, fontSize = 14.sp)
+                    Text("YOLO26n · 640", color = NeuralMuted, fontSize = 12.sp)
+                }
+                Text(
+                    "O modelo é executado no tablet e analisa os quadros recebidos do drone. Ative a IA na câmera.",
+                    color = NeuralMuted,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp
+                )
+                androidx.compose.material3.HorizontalDivider(color = NeuralBorder)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "Atualizar conexão",
+                        modifier = Modifier.weight(1f),
+                        color = Color.White,
+                        fontSize = 13.sp
+                    )
+                    Surface(
+                        onClick = onRefreshStatusClick,
+                        color = NeuralSurfaceAlt,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Text("Reconectar", color = Color.White, fontSize = 12.sp)
+                        }
                     }
                 }
             }
+        }
+        Text(
+            "ai-drone • v" + com.sloth.registerapp.BuildConfig.VERSION_NAME,
+            color = NeuralMuted,
+            fontSize = 11.sp
+        )
+        Spacer(Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun OperationalQuickLink(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = NeuralSurface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, NeuralBorder)
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 15.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(7.dp)
+        ) {
+            Text(title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Text(subtitle, color = NeuralMuted, fontSize = 11.sp)
+            Icon(Icons.Default.ArrowForward, contentDescription = null, tint = NeuralMuted, modifier = Modifier.size(16.dp))
         }
     }
 }
