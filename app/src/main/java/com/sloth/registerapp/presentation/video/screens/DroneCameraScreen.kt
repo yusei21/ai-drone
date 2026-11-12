@@ -523,6 +523,59 @@ fun DroneCameraScreen(
             )
         }
 
+        // Status real da IA, sobreposto sem ocultar o vídeo.
+        Surface(
+            onClick = { showAiSheet = true },
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 62.dp),
+            shape = RoundedCornerShape(8.dp),
+            color = Color.Black.copy(alpha = 0.72f),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.28f))
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    Modifier.size(6.dp).background(
+                        if (detectionEnabled && selectedDetectionModelId == activeDetectionModelId &&
+                            availableModels.any { it.id == selectedDetectionModelId } &&
+                            isFeedAvailable && previewEnabled && lastDetectionError == null
+                        ) Color.White else Color.Gray,
+                        CircleShape
+                    )
+                )
+                Text(
+                    text = when {
+                        availableModels.isEmpty() -> "IA  /  SEM MODELO"
+                        !detectionEnabled -> "IA  /  DESLIGADA"
+                        !isFeedAvailable -> "IA  /  AGUARDANDO DRONE"
+                        !previewEnabled -> "IA  /  VÍDEO INDISPONÍVEL"
+                        selectedDetectionModelId != activeDetectionModelId || lastDetectionError != null ->
+                            "IA  /  INDISPONÍVEL"
+                        else -> "IA  /  ${detectionBoxes.size} PESSOAS"
+                    },
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.7.sp
+                )
+                if (detectionEnabled && lastInferenceMs != null) {
+                    Text(
+                        text = "${lastInferenceMs} ms",
+                        color = Color.White.copy(alpha = 0.6f),
+                        fontSize = 10.sp
+                    )
+                }
+                Icon(
+                    Icons.Default.Tune,
+                    contentDescription = "Abrir configuração de IA",
+                    tint = Color.White,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+        }
+
         // HUD de telemetria linear (sem card)
         AnimatedVisibility(
             visible = showControls && visible,
@@ -619,8 +672,8 @@ fun DroneCameraScreen(
             }
         }
 
-        // Mini mapa no canto inferior esquerdo
-        Box(
+        // O mapa aparece apenas com controles expandidos.
+        if (showControls) Box(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(start = 12.dp, bottom = 24.dp)
@@ -671,7 +724,7 @@ fun DroneCameraScreen(
             exit = fadeOut() + slideOutVertically { -it },
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 44.dp, end = 10.dp)
+                .padding(top = 72.dp, end = 14.dp)
         ) {
             CameraControls(
                 isRecording = isRecording,
@@ -1040,18 +1093,13 @@ fun CompactHeader(
         DroneState.GOING_HOME -> "Retornando"
         DroneState.ERROR -> "Erro"
     }
-    val colorScheme = MaterialTheme.colorScheme
     val safeBattery = batteryLevel.coerceIn(0, 100)
-    val batteryColor = when {
-        safeBattery > 50 -> colorScheme.secondary
-        safeBattery > 20 -> colorScheme.tertiary
-        else -> colorScheme.error
-    }
+    val batteryColor = if (safeBattery <= 20) Color(0xFFFF7676) else Color.White
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.Transparent)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .background(Color.Black.copy(alpha = 0.72f))
+            .padding(horizontal = 14.dp, vertical = 7.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -1069,12 +1117,20 @@ fun CompactHeader(
             )
         }
 
-        Text(
-            text = statusText,
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "AI-DRONE   /   AO VIVO",
+                color = Color.White,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+            Text(
+                text = statusText,
+                color = Color.White.copy(alpha = 0.72f),
+                fontSize = 10.sp
+            )
+        }
 
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
@@ -1116,10 +1172,10 @@ fun CameraControls(
     onAiToggle: () -> Unit
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val buttonGray = colorScheme.onSurfaceVariant
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+    val buttonGray = Color.White
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CompactControlButton(
             icon = Icons.Default.CameraAlt,
@@ -1165,7 +1221,7 @@ private fun AiPanelButton(
         icon = Icons.Default.Psychology,
         onClick = onClick,
         enabled = true,
-        color = if (enabled) Color(0xFF00C2FF) else Color.White.copy(alpha = 0.70f),
+        color = Color.White.copy(alpha = if (enabled) 1f else 0.65f),
         size = 38.dp
     )
 }
@@ -1177,7 +1233,7 @@ private fun PersonDetectionOverlay(
 ) {
     if (detections.isEmpty()) return
 
-    val boxColor = Color(0xFF00E5A0)
+    val boxColor = Color.White
     val labelPaint = remember {
         Paint().apply {
             isAntiAlias = true
@@ -1189,7 +1245,7 @@ private fun PersonDetectionOverlay(
     val badgePaint = remember {
         Paint().apply {
             isAntiAlias = true
-            color = android.graphics.Color.argb(210, 0, 194, 255)
+            color = android.graphics.Color.argb(220, 15, 15, 15)
         }
     }
 
@@ -1235,7 +1291,7 @@ fun TelemetryHudStrip(
 ) {
     Row(
         modifier = Modifier
-            .background(Color.Black.copy(alpha = 0.34f), RoundedCornerShape(10.dp))
+            .background(Color.Black.copy(alpha = 0.72f), RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 5.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1313,12 +1369,12 @@ private fun DetectionModelPickerSheet(
     val selectedModel = models.firstOrNull { it.id == selectedModelId }
     val canEnableDetection = selectedModel?.installed == true
 
-    val AiBlue   = Color(0xFF00C2FF)
-    val AiGreen  = Color(0xFF00E5A0)
-    val AiAmber  = Color(0xFFFFC857)
-    val AiRed    = Color(0xFFFF6B6B)
-    val SheetBg  = Color(0xFF070E1B)
-    val CardBg   = Color(0xFF0C1626)
+    val AiBlue   = Color.White
+    val AiGreen  = Color.White
+    val AiAmber  = Color(0xFFFFCC80)
+    val AiRed    = Color(0xFFFF8A80)
+    val SheetBg  = Color(0xFF101010)
+    val CardBg   = Color(0xFF191919)
     val Divider  = Color.White.copy(alpha = 0.07f)
 
     ModalBottomSheet(
@@ -1362,13 +1418,13 @@ private fun DetectionModelPickerSheet(
                 }
                 Column {
                     Text(
-                        text = "Detecção de objetos",
+                        text = "Detecção de pessoas",
                         color = Color.White,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Pipeline YOLO em tempo real",
+                        text = "YOLO26  /  processamento local",
                         color = Color.White.copy(alpha = 0.45f),
                         fontSize = 11.sp
                     )
