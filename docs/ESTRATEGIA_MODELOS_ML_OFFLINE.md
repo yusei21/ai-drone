@@ -1,5 +1,7 @@
 # Estrategia de Modelos de Machine Learning Offline (com sincronizacao via servidor)
 
+> **Nota de estado (12/11/2026): documento historico/proposta, nao descricao do fluxo padrao atual.** O ai-drone v1.1.0 embarca `pessoas_ativo.tflite` no APK e o ModelRegistry prioriza `filesDir/ml_models/pessoas_ativo.tflite` quando presente. A inferencia e local no tablet; nao ha dependencia do fallback de inferencia remoto para o fluxo padrao. Catalogo/download/rollback remoto descritos abaixo sao propostas antigas, nao requisitos cumpridos. Consulte [UX v1.1](UX_V1_1.md) e [benchmarks YOLO26n](BENCHMARKS_YOLO26_PESSOAS_640.md).
+
 ## Objetivo
 Permitir que o app:
 - liste modelos de ML disponiveis no servidor,
