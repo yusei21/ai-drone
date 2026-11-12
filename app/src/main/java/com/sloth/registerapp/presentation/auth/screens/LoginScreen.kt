@@ -150,11 +150,6 @@ fun LoginScreen(
             .fillMaxSize()
             .background(NeuralBg)
     ) {
-        NeuralAnimatedBackdrop(
-            baseColor = NeuralBg,
-            primaryColor = NeuralPrimary,
-            secondaryColor = NeuralSecondary
-        )
 
         Box(
             modifier = Modifier
@@ -452,14 +447,14 @@ private fun LoginIdentity() {
             Box(contentAlignment = Alignment.Center) {
                 Image(
                     painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-                    contentDescription = "Logo Vently Neural",
+                    contentDescription = "Logo ai-drone",
                     modifier = Modifier.size(56.dp)
                 )
             }
         }
 
         Text(
-            text = "Vently Neural",
+            text = "ai-drone",
             style = TextStyle(
                 brush = Brush.horizontalGradient(listOf(NeuralPrimary, NeuralSecondary)),
                 fontSize = 30.sp,
