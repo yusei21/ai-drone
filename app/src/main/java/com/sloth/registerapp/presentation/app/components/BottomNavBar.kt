@@ -60,7 +60,7 @@ fun BottomNavBar(
     val neuralBorder = NeuralColors.Border
     val neuralPrimary = NeuralColors.Primary
     val neuralSecondary = NeuralColors.Secondary
-    val inactive = Color(0xFF2A4A6A)
+    val inactive = NeuralColors.Muted
 
     val items = listOf(
         BottomItem.Home,
@@ -82,7 +82,7 @@ fun BottomNavBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 14.dp, vertical = 6.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -93,13 +93,13 @@ fun BottomNavBar(
                 Surface(
                     modifier = Modifier
                         .weight(1f)
-                        .height(50.dp),
+                        .height(54.dp),
                     color = if (selected) neuralSurface else Color.Transparent,
                     contentColor = itemColor,
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(10.dp),
                     border = BorderStroke(
                         1.dp,
-                        if (selected) neuralPrimary.copy(alpha = 0.28f) else neuralBorder
+                        if (selected) NeuralColors.BorderStrong else neuralBorder
                     ),
                     onClick = {
                         if (item.route == BottomItem.Live.route) {
@@ -122,7 +122,7 @@ fun BottomNavBar(
                                     .align(Alignment.TopCenter)
                                     .background(
                                         Brush.horizontalGradient(
-                                            colors = listOf(Color.Transparent, neuralSecondary, Color.Transparent)
+                                            colors = listOf(Color.Transparent, neuralPrimary, Color.Transparent)
                                         )
                                     )
                             )
