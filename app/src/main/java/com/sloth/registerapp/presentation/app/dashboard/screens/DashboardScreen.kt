@@ -131,7 +131,7 @@ fun DashboardScreen(
             .fillMaxSize()
             .background(NeuralBg)
     ) {
-        DashboardGridBackground()
+        // Clean operational home; no simulated radar animation behind content.
 
         Column(
             modifier = Modifier
@@ -165,7 +165,7 @@ fun DashboardScreen(
                         )
 
                         SectionTitle(
-                            title = "Drones Compativeis",
+                            title = "Aeronaves compatíveis",
                             icon = Icons.Default.AirplanemodeActive,
                             actionLabel = "Lista completa",
                             onActionClick = onShowAllDronesClick
@@ -176,20 +176,20 @@ fun DashboardScreen(
                                 Log.d(DASHBOARD_TAG, "Mock do site oficial para ${drone.name}: ${drone.officialUrl}")
                                 Toast.makeText(
                                     context,
-                                    "Mock do site oficial da DJI para ${drone.name}",
+                                    "Informações: ${drone.name}",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
                         )
 
                         SectionTitle(
-                            title = "Apoio Institucional",
+                            title = "Apoio institucional",
                             icon = Icons.Default.Business
                         )
                         InstitutionalSupportGrid()
 
                         SectionTitle(
-                            title = "Sobre o Projeto",
+                            title = "Sobre o projeto",
                             icon = Icons.Default.Info,
                             actionLabel = "Clima",
                             onActionClick = onWeatherClick
@@ -244,7 +244,7 @@ private fun DashboardTopBar(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Vantly Neural",
+                text = "ai-drone",
                 style = TextStyle(
                     brush = Brush.linearGradient(listOf(NeuralPrimary, NeuralSecondary)),
                     fontSize = 18.sp,
@@ -252,7 +252,7 @@ private fun DashboardTopBar(
                 )
             )
             Text(
-                text = "Visao computacional e rotas",
+                text = "OPERAÇÕES   /   VISÃO COMPUTACIONAL",
                 color = NeuralMuted,
                 fontSize = 10.sp
             )
@@ -284,7 +284,7 @@ private fun HeroBanner(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(228.dp)
+            .height(196.dp)
     ) {
         Box(
             modifier = Modifier
@@ -293,7 +293,7 @@ private fun HeroBanner(
                     Brush.linearGradient(
                         colors = listOf(
                             NeuralBg,
-                            Color(0xFF0A2050),
+                            NeuralSurface,
                             NeuralBg
                         )
                     )
@@ -324,7 +324,7 @@ private fun HeroBanner(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "SISTEMA ATIVO",
+                            text = "PAINEL DE OPERAÇÕES",
                             color = NeuralPrimary,
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold
@@ -333,7 +333,7 @@ private fun HeroBanner(
                 }
 
                 Text(
-                    text = "Bem-vindo de volta,\n${if (isLoggedIn) userName else "Piloto"}.",
+                    text = "Pronto para operar,\n${if (isLoggedIn) userName else "Piloto"}.",
                     color = Color.White,
                     fontSize = 28.sp,
                     lineHeight = 34.sp,
@@ -341,7 +341,7 @@ private fun HeroBanner(
                 )
 
                 Text(
-                    text = "Gerencie rotas e monitore seus drones com inteligencia artificial em tempo real.",
+                    text = "Vídeo DJI, pessoas detectadas e missões em um único painel.",
                     color = NeuralMuted,
                     fontSize = 13.sp,
                     lineHeight = 20.sp
