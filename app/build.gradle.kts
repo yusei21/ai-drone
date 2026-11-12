@@ -72,6 +72,10 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    androidResources {
+        // TFLite assets must stay uncompressed so AssetFileDescriptor can mmap them.
+        noCompress += "tflite"
+    }
     buildFeatures {
         compose = true
         viewBinding = true
