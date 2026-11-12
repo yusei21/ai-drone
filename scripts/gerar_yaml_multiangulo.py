@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gera YAML para treinar pessoas em múltiplos ângulos, sem inventar datasets.
+"""Gera YAML para treinar pessoas com fontes YOLO disponíveis, sem inventar datasets.
 
 Exemplo:
  python scripts/gerar_yaml_multiangulo.py \
@@ -70,19 +70,20 @@ def main() -> None:
             parser.error(f"Fonte invalida: {entry}. Use ANGULO=PASTA")
         name, raw_path = entry.split("=", 1)
         name = name.strip().lower()
-        if name not in ("aereo", "olhos", "baixo"):
-            parser.error(f"Angulo {name!r} nao reconhecido. Use aereo, olhos ou baixo")
+        if name not in ("aereo", "olhos", "baixo", "crowd"):
+            parser.error(f"Fonte {name!r} nao reconhecida. Use aereo, olhos, baixo ou crowd")
         if name in source_dirs:
             parser.error(f"Angulo duplicado: {name}")
         source_dirs[name] = Path(raw_path).expanduser().resolve()
-    required = {"aereo", "olhos", "baixo"}
-    if set(source_dirs) != required:
-        parser.error("Para o treino multiangulo, forneca as fontes aereo, olhos e baixo")
-    if len(set(source_dirs.values())) != 3:
-        parser.error("As tres fontes precisam apontar para pastas distintas")
+    if len(source_dirs) < 2:
+        parser.error("Forneca pelo menos duas fontes distintas (ex.: aereo, olhos, crowd)")
+    if len(set(source_dirs.values())) != len(source_dirs):
+        parser.error("Cada fonte precisa apontar para uma pasta distinta")
 
     groups: dict[str, list[str]] = {"train": [], "val": []}
-    for name in ("aereo", "olhos", "baixo"):
+    for name in ("aereo", "olhos", "baixo", "crowd"):
+        if name not in source_dirs:
+            continue
         paths, counts = check_source(name, source_dirs[name])
         groups["train"].append(paths[0])
         groups["val"].append(paths[1])
@@ -92,7 +93,7 @@ def main() -> None:
     if destination.exists():
         parser.error(f"Arquivo ja existe: {destination}. Escolha outro caminho ou remova manualmente apos revisar.")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    lines = ["# Dataset multiangulo de UMA classe: pessoa", "train:"]
+    lines = ["# Dataset de multiplas fontes de UMA classe: pessoa", "train:"]
     lines.extend(f"  - '{p}'" for p in groups["train"])
     lines.append("val:")
     lines.extend(f"  - '{p}'" for p in groups["val"])
@@ -100,6 +101,7 @@ def main() -> None:
     destination.write_text("\n".join(lines), encoding="utf-8")
     print(f"YAML validado e criado: {destination}")
     print("ATENCAO: separar train/val por cena, pessoa e video; este script nao detecta vazamento nem duplicatas.")
+    print("ATENCAO: ter fontes diversas NAO comprova cobertura de angulos baixos ou oclusoes.")
 
 
 if __name__ == "__main__":
