@@ -84,11 +84,7 @@ fun WelcomeScreen(
             .fillMaxSize()
             .background(Bg)
     ) {
-        NeuralAnimatedBackdrop(
-            baseColor = Bg,
-            primaryColor = Primary,
-            secondaryColor = Secondary
-        )
+        // Tela de entrada limpa: sem particulas ou luzes animadas sobre o conteúdo.
 
         Column(
             modifier = Modifier
@@ -119,7 +115,7 @@ private fun AppHeader() {
     ) {
         Image(
             painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-            contentDescription = "Logo Vently Neural",
+            contentDescription = "ai-drone",
             modifier = Modifier.size(80.dp)
         )
 
@@ -127,8 +123,7 @@ private fun AppHeader() {
 
         Text(
             text = buildAnnotatedString {
-                withStyle(SpanStyle(color = Color.White)) { append("Vently") }
-                withStyle(SpanStyle(color = Primary)) { append(" Neural") }
+                withStyle(SpanStyle(color = Color.White)) { append("ai-drone") }
             },
             fontSize = 28.sp,
             fontWeight = FontWeight.ExtraBold,
@@ -148,7 +143,7 @@ private fun InfoCard() {
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         Text(
-            text = "Plataforma operacional de drones",
+            text = "Operações aéreas com visão computacional",
             color = Color.White,
             fontSize = 17.sp,
             fontWeight = FontWeight.ExtraBold
@@ -157,7 +152,7 @@ private fun InfoCard() {
         Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = "Gerencie missoes, rotas e monitoramento em tempo real com suporte a visao computacional.",
+            text = "Acesse vídeo DJI, detecção de pessoas e missões com os controles essenciais em destaque.",
             color = Muted,
             fontSize = 13.sp,
             lineHeight = 22.sp
@@ -220,7 +215,7 @@ private fun BottomSection(onEnterClick: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Vently Neural  ·  v${BuildConfig.VERSION_NAME}",
+            text = "ai-drone  ·  v${BuildConfig.VERSION_NAME}",
             color = Muted,
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace,
@@ -250,7 +245,7 @@ private fun GradientButton(onClick: () -> Unit) {
                 scaleY = scale
             }
             .background(
-                Brush.horizontalGradient(listOf(Primary, Secondary)),
+                Brush.horizontalGradient(listOf(Primary, Primary)),
                 RoundedCornerShape(16.dp)
             )
             .pointerInput(Unit) {
@@ -271,7 +266,7 @@ private fun GradientButton(onClick: () -> Unit) {
         ) {
             Text(
                 text = "Entrar",
-                color = Color.White,
+                color = Bg,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.ExtraBold
             )
@@ -279,7 +274,7 @@ private fun GradientButton(onClick: () -> Unit) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
-                tint = Color.White,
+                tint = Bg,
                 modifier = Modifier.size(18.dp)
             )
         }
