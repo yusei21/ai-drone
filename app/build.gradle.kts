@@ -39,8 +39,8 @@ android {
         applicationId = "com.sloth.registerapp"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1.0"
         buildConfigField("boolean", "ALLOW_PUBLIC_FLIGHT_OPS", "true")
         buildConfigField("String", "WEATHER_API_KEY", "\"$weatherApiKey\"")
         buildConfigField("String", "MAPBOX_ACCESS_TOKEN", "\"$mapboxAccessToken\"")
