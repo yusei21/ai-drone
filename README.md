@@ -1,114 +1,57 @@
-# Vantly Neural — Plataforma de Missões para Drones
+# ai-drone
 
-Aplicativo Android em Kotlin para planejamento, execução e monitoramento de missões de drones, com foco em operação autônoma, telemetria, streaming e reconhecimento facial. O projeto evoluiu para uma arquitetura mais modular, com separação entre `core`, `features` e `presentation`.
+Aplicativo Android para operar drones DJI, consultar telemetria, executar missoes e **detectar pessoas em video** usando um modelo YOLO26n rodando no dispositivo. Projeto em desenvolvimento ativo.
 
-## Status
-Em desenvolvimento ativo. O fluxo principal (login → dashboard → missões → controle) já existe, e o módulo de missão foi refatorado para uso em produção (suspend functions, validações e timeouts).
+**Versao do app:** v1.1.0 (`versionCode 2`). **Modelo atual:** YOLO26n Pessoas 640. O nome do arquivo embarcado no Android e `pessoas_ativo.tflite`.
 
-## Visão Geral
-O app integra:
-- Conexão com drones DJI (SDK)
-- Planejamento e execução de missões
-- Telemetria e controle do drone
-- Streaming RTMP (drone e celular)
-- Reconhecimento e cadastro de rostos
-- Autenticação e sessão de usuário
-- Telas em Jetpack Compose
+## O que o operador encontra
 
-## Arquitetura e Estrutura
-Estrutura geral de pacotes (simplificada):
+- **Visao geral:** estado da conexao DJI e atalho primario **Abrir camera DJI**.
+- **Camera DJI:** feed, controles de camera, status da IA, telemetria e minimapa recolhivel.
+- **Deteccao de pessoas:** modelo LiteRT/TFLite local com selecao automatica, ativado no painel de IA.
+- **Missoes:** lista, planejamento e execucao (com limitacoes ainda em validacao).
+- **Relatorios:** historico por missao; nao inserir resultados ficticios como dados reais.
+- **Configuracoes:** preferências, estado da conta, versao e identificacao do modelo.
 
-```
+O redesign busca hierarquia simples e interfaces funcionais inspiradas em Notion/Vercel; **nem todos os fluxos secundarios passaram por auditoria de usabilidade**.
+
+## Estado de validacao — 12/11/2026
+
+| Etapa | Situacao |
+| --- | --- |
+| Treinamento YOLO26n (~7 h, 640 px) | Concluido no PC |
+| Validacao do checkpoint | P=0,826; R=0,591; mAP50=0,697; mAP50–95=0,417 |
+| Exportacao do TFLite | Concluida; tensores `[1,3,640,640]` → `[1,5,8400]` |
+| Build Android antes do redesign final | `BUILD SUCCESSFUL` informado pelo operador |
+| Instalacao do APK anterior no tablet | `adb install -r` = `Success` |
+| Build/instalacao apos os commits atuais de UX | **Ainda nao confirmados** |
+| Inferencia YOLO26n 640 sobre feed DJI no tablet | **Ainda nao validada com benchmark medido** |
+
+**Importante:** a IA roda no celular/tablet, nao no hardware do Mavic Pro. O sucesso de conexao DJI em versao anterior nao confirma automaticamente estabilidade da nova interface.
+
+Veja os [benchmarks completos](docs/BENCHMARKS_YOLO26_PESSOAS_640.md) para dados, protocolo e limitacoes.
+
+## Arquitetura
+
+```text
 app/src/main/java/com/sloth/registerapp/
-├── core/
-│   ├── auth/               # Sessão, token, helpers de autenticação
-│   ├── dji/                # Integração com DJI SDK
-│   ├── network/            # Retrofit, WebSocket, conectividade
-│   ├── database/           # Room (AppDatabase, DAOs, Entities)
-│   ├── settings/           # Configuração (RTMP, etc.)
-│   ├── ui/theme/           # Tema base
-│   └── utils/              # Helpers (permissões, arquivos, datas)
-├── features/
-│   ├── auth/               # Domain + data de autenticação
-│   ├── facedetection/      # Domain + data (ML Kit + Room)
-│   ├── mission/            # Domain + data (missões, telemetria, drone)
-│   └── streaming/          # Streaming RTMP (drone/celular)
-└── presentation/
-    ├── app/                # Welcome, Dashboard, MainActivity
-    ├── auth/               # Login/Register
-    ├── facedetection/      # Telas e viewmodels de reconhecimento
-    ├── mission/            # Telas de missão, câmera, controle
-    ├── report/             # Relatórios
-    ├── settings/           # Configurações
-    └── shared/components/  # Componentes reutilizáveis
+  core/             # DJI, sessao, rede, configuracoes
+  features/
+    mldetection/    # Registro de modelos, decodificacao e inferencia
+    objectdetection/# Preferencias da deteccao
+    mission/        # Missoes, telemetria e operacoes
+    streaming/      # RTMP e video
+  presentation/
+    app/            # Dashboard, navegacao, configuracoes, relatorios
+    mission/        # Telas de planejamento e execucao
+    video/          # Camera DJI e celular
 ```
 
-## Fluxo do Aplicativo
-Fluxo atual da navegação (MainActivity):
-1. **Welcome** → **Login** ou **Register**
-2. **Dashboard** (status do drone e atalhos)
-3. **Missions** (lista + criação)
-4. **Mission Control** (Activity dedicada)
-5. **Drone Camera / Cell Camera** (feeds)
-6. **Reports** (listagem + detalhe)
-7. **Settings**
+O app usa Kotlin + Jetpack Compose, DJI Mobile SDK e LiteRT/TFLite.
 
-## Funcionalidades
-- **Autenticação** com sessão persistente
-- **Dashboard** com status de conexão e ações rápidas
-- **Missões**: listar, criar e executar
-- **Controle de drone** (telemetria e comandos)
-- **Streaming RTMP** (drone e celular)
-- **Reconhecimento facial** (captura, registro e lista)
-- **Relatórios** por missão
-- **Tema e UI moderna** em Compose
+## Construir e instalar
 
-## Alterações Recentes (Resumo)
-Refatoração do `DroneMissionManager` com foco em produção:
-- Callbacks → `suspend` functions
-- Timeouts para upload/start/stop
-- Validações robustas (waypoints, velocidades)
-- Exceptions customizadas
-- Cleanup e prevenção de memory leaks
-- Exemplos e documentação de integração
-
-## Documentação
-- [Índice da documentação](docs/README.md)
-- [Análise do projeto em campo](docs/ANALISE_DRONE_3_DIAS.md)
-- [Estratégia de modelos ML offline](docs/ESTRATEGIA_MODELOS_ML_OFFLINE.md)
-- [Plano auth offline first](docs/PLANO_TODO_AUTH_OFFLINE_FIRST.md)
-- [Contrato API auth + missões](docs/SPEC_CONTRATO_AUTH_MISSOES.md)
-- [Galeria por missão](docs/TODO_GALERIA_MISSAO_EXECUCAO.md)
-- [Camada climática](docs/TODO_IMPLEMENTACAO_CLIMA.md)
-- [Rework de settings e mídia](docs/TODO_SETTINGS_E_MIDIA_REWORK.md)
-
-## To-dos
-### Concluído
-- Refatoração completa do `DroneMissionManager`
-- Documentação técnica da refatoração
-- Exemplo de `MissionViewModel`
-- Exemplos de testes
-
-### Pendente
-- Implementar Waypoint Mission real no `DroneCommandManager`
-- Concluir bind do feed DJI em `DroneCameraScreen` e `VideoFeedActivity`
-- Implementar upload de missão e WebSocket listener no `MissionRepositoryImpl`
-- Finalizar sincronização de missões (cache/conflitos)
-- Implementar recuperação de senha no login
-- Substituir `BASE_URL` de teste no `RetrofitClient`
-- Ajustar `AuthenticationHelper` para usar context real
-- Integrar telemetria real no `DroneControlScreen`
-
-## Pré-requisitos
-- Android Studio (recente)
-- Kotlin/Gradle atualizados
-- DJI Mobile SDK configurado
-- Dispositivo físico Android (para testes reais)
-
-## Como rodar
-1. Abra o projeto no Android Studio
-2. Configure a chave do DJI SDK no `AndroidManifest.xml`
-3. Configure os tokens do Mapbox em `local.properties`, `gradle.properties` ou variáveis de ambiente:
+Requer JDK/Android SDK configurados, dependencias do projeto e tablet Android com depuracao USB autorizada. Chaves e tokens, quando exigidos pelo ambiente:
 
 ```properties
 MAPBOX_ACCESS_TOKEN=SEU_TOKEN_PUBLICO_DO_MAPBOX
@@ -116,8 +59,45 @@ MAPBOX_DOWNLOADS_TOKEN=SEU_TOKEN_DE_DOWNLOADS_DO_MAPBOX
 WEATHER_API_KEY=SUA_CHAVE_CLIMA
 ```
 
-4. Sincronize o Gradle
-5. Rode em um dispositivo físico
+O modelo nao e publicado no Git. Se estiver preparando um build novo a partir dos pesos treinados:
 
-## Licença
+```fish
+cd /home/yusei/Documents/workspace/ai-drone
+
+.venv/bin/python scripts/exportar_modelo_android.py \
+  --pesos runs/ai_drone/pessoas_7h_20261112/weights/best.pt \
+  --imgsz 640
+
+.venv/bin/python scripts/instalar_modelo_android.py \
+  --modelo runs/android_models/pessoas_640.tflite
+
+./gradlew :app:assembleDebug
+adb devices
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+Se o asset `app/src/main/assets/ml_models/pessoas_ativo.tflite` ja existir, a instalacao do modelo podera exigir `--replace`. **Nao rode exportacao/treinamento novamente apenas para mudar a UI**; mantenha o asset local ao atualizar com `git pull`.
+
+Ao instalar, verifique a versao nas Configuracoes, abra a camera e teste a IA com o drone **no solo**. A permissao USB deve aparecer como `device` (nao `unauthorized`).
+
+## Documentacao
+
+- [Indice tecnico](docs/README.md)
+- [Benchmarks YOLO26n Pessoas 640](docs/BENCHMARKS_YOLO26_PESSOAS_640.md)
+- [UX e verificacao da v1.1.0](docs/UX_V1_1.md)
+- [Analise do projeto em campo](docs/ANALISE_DRONE_3_DIAS.md)
+- [Plano de deteccao no video DJI](docs/PLANO_DETECCAO_OBJETOS_VIDEO_DRONE.md)
+- [Estrategia historica de modelos e sincronizacao](docs/ESTRATEGIA_MODELOS_ML_OFFLINE.md)
+
+## Pendencias principais
+
+1. Compilar e testar o HEAD atual em Android real, incluindo orientacao do tablet.
+2. Testar equivalencia das deteccoes `.pt` vs `.tflite`.
+3. Medir latencia/FPS ponta a ponta no Tab S9 com video DJI.
+4. Avaliar recall para pessoas pequenas e imagens aereas.
+5. Revisar estados de erro, acessibilidade e navegacao de telas secundarias.
+6. Continuar a estabilizacao dos fluxos de missoes e sincronizacao.
+
+## Licenca
+
 MIT
