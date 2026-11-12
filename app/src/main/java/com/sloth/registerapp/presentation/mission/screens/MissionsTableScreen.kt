@@ -98,7 +98,7 @@ fun MissionsTableScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Gerenciador de missões",
+                            text = "OPERAÇÕES  /  ROTAS E EXECUÇÃO",
                             color = MissionMuted,
                             fontSize = 10.sp
                         )
@@ -117,11 +117,7 @@ fun MissionsTableScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(MissionBg, Color(0xFF091A36), MissionBg)
-                    )
-                )
+                .background(MissionBg)
         ) {
             when {
                 isLoading -> LoadingMissionsState()
