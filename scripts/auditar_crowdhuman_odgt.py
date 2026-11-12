@@ -45,6 +45,7 @@ def audit(path: Path, expected_sha: str) -> int:
     counts: Counter[str] = Counter()
     seen_ids: set[str] = set()
     errors: list[str] = []
+    geometry_warnings: list[str] = []
     with path.open("r", encoding="utf-8") as file:
         for line_number, raw_line in enumerate(file, 1):
             if not raw_line.strip():
@@ -68,7 +69,7 @@ def audit(path: Path, expected_sha: str) -> int:
                 errors.append(f"linha {line_number}: gtboxes não é lista")
                 continue
             counts["images"] += 1
-            for box in boxes:
+            for box_index, box in enumerate(boxes, 1):
                 if not isinstance(box, dict):
                     errors.append(f"linha {line_number}: gtbox inválido")
                     continue
@@ -88,12 +89,21 @@ def audit(path: Path, expected_sha: str) -> int:
                 counts[tag] += 1
                 if ignored == 1:
                     counts["ignored"] += 1
-                else:
-                    counts["person_usable"] += 1
+                geometry_ok = True
                 for key in ("vbox", "fbox", "hbox"):
                     if not valid_box(box.get(key)):
-                        errors.append(f"linha {line_number}: {key} inválido")
-                if tag == "person" and ignored == 0:
+                        geometry_ok = False
+                        counts["invalid_geometry"] += 1
+                        if len(geometry_warnings) < 12:
+                            geometry_warnings.append(
+                                f"linha {line_number}, ID={image_id}, caixa {box_index}, "
+                                f"tag={tag}, ignore={ignored}: {key}={box.get(key)!r}"
+                            )
+                if tag == "person" and ignored == 0 and geometry_ok:
+                    counts["person_usable"] += 1
+                elif tag == "person" and ignored == 0:
+                    counts["person_excluded_invalid_geometry"] += 1
+                if tag == "person" and ignored == 0 and geometry_ok:
                     vbox, fbox = box.get("vbox"), box.get("fbox")
                     if valid_box(vbox) and valid_box(fbox):
                         va = vbox[2] * vbox[3]
@@ -103,8 +113,13 @@ def audit(path: Path, expected_sha: str) -> int:
             if len(errors) >= 20:
                 print("Interrompendo após 20 problemas, exemplos:")
                 break
-    for key in ("images", "person", "mask", "ignored", "person_usable", "high_occlusion_candidate"):
+    for key in ("images", "person", "mask", "ignored", "person_usable", "person_excluded_invalid_geometry", "invalid_geometry", "high_occlusion_candidate"):
         print(f"{key}: {counts[key]}")
+    if counts["invalid_geometry"]:
+        print("AVISO: algumas caixas têm geometria inválida. Não devem ser")
+        print("convertidas em rótulos YOLO sem revisão/exclusão explícita:")
+        for warning in geometry_warnings:
+            print(f"  - {warning}")
     if errors:
         print("FALHA: problemas estruturais detectados:")
         for err in errors[:20]:
@@ -113,7 +128,12 @@ def audit(path: Path, expected_sha: str) -> int:
     if counts["images"] == 0 or counts["person_usable"] == 0:
         print("FALHA: sem anotações aproveitáveis.")
         return 2
-    print("OK: ODGT estruturalmente consistente com o esquema do CrowdHuman.")
+    if counts["invalid_geometry"]:
+        print("AUDITORIA PARCIAL: JSON, IDs e tags passaram, porém há caixas")
+        print("com geometria anômala. A conversão DEVE excluí-las ou corrigi-las")
+        print("após inspeção; este script não altera o dataset.")
+    else:
+        print("OK: ODGT estruturalmente consistente com o esquema do CrowdHuman.")
     print("ATENÇÃO: autenticidade da distribuição original, qualidade visual, licença e")
     print("correspondência das imagens ainda exigem validação independente.")
     return 0
