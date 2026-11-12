@@ -181,7 +181,6 @@ fun ReportScreen(
     val reports by flightReportManager.reports.collectAsStateWithLifecycle(initialValue = emptyList())
     var query by rememberSaveable { mutableStateOf("") }
     var selectedStatus by rememberSaveable { mutableStateOf<MissionOutcomeStatus?>(null) }
-    var seededMockReport by rememberSaveable { mutableStateOf(false) }
     val missions = remember(reports) { reports.map { it.toUiModel() } }
     val normalizedQuery = query.trim().lowercase()
     val filteredMissions = missions.filter { mission ->
@@ -194,20 +193,11 @@ fun ReportScreen(
         matchesQuery && matchesStatus
     }
 
-    LaunchedEffect(reports.isEmpty(), seededMockReport) {
-        if (reports.isEmpty() && !seededMockReport) {
-            createMockReport(flightReportManager)
-            seededMockReport = true
-        }
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(ReportBg)
     ) {
-        ReportGridBackground()
-
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 10.dp, bottom = 24.dp),
@@ -215,8 +205,8 @@ fun ReportScreen(
         ) {
             item {
                 ReportTopBar(
-                    title = "Relatórios de Missão",
-                    subtitle = "Visão consolidada das execuções registradas",
+                    title = "Relatórios",
+                    subtitle = "OPERAÇÕES  /  HISTÓRICO DE MISSÕES",
                     onBackClick = onBackClick
                 )
             }
