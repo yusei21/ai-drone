@@ -95,20 +95,6 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(NeuralColors.Bg)
     ) {
-        // Subtle grid background
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            NeuralColors.Bg,
-                            Color(0xFF091836),
-                            NeuralColors.Bg
-                        )
-                    )
-                )
-        )
 
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
