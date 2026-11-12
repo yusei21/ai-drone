@@ -257,10 +257,28 @@ fun DroneCameraScreen(
         }
     }
 
-    LaunchedEffect(persistedDetectionEnabled, persistedDetectionModelId) {
+    // The offline test screen was removed. Resolve the canonical model directly
+    // in the DJI camera, preferring a newly installed local model over an APK asset.
+    LaunchedEffect(persistedDetectionEnabled, persistedDetectionModelId, availableModels) {
         detectionEnabled = persistedDetectionEnabled
-        selectedDetectionModelId = persistedDetectionModelId
-        mlDetectionViewModel.selectModel(persistedDetectionModelId)
+        val preferred = availableModels.firstOrNull {
+            it.id == com.sloth.registerapp.features.mldetection.data.registry.ModelRegistry.DEFAULT_LOCAL_ID
+        } ?: availableModels.firstOrNull {
+            it.id == com.sloth.registerapp.features.mldetection.data.registry.ModelRegistry.DEFAULT_ASSET_ID
+        }
+        val saved = availableModels.firstOrNull { it.id == persistedDetectionModelId }
+        val resolved = if (
+            persistedDetectionModelId.isBlank() ||
+            saved == null ||
+            persistedDetectionModelId == com.sloth.registerapp.features.mldetection.data.registry.ModelRegistry.DEFAULT_ASSET_ID
+        ) preferred ?: saved else saved
+        if (resolved != null) {
+            selectedDetectionModelId = resolved.id
+            mlDetectionViewModel.selectModel(resolved.id)
+            if (persistedDetectionModelId != resolved.id) {
+                objectDetectionRepo.setActiveModelId(resolved.id)
+            }
+        }
     }
 
     LaunchedEffect(activeDetectionModelId, availableModels) {
