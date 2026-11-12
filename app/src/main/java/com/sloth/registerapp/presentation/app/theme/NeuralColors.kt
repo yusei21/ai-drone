@@ -2,35 +2,21 @@ package com.sloth.registerapp.presentation.app.theme
 
 import androidx.compose.ui.graphics.Color
 
-/**
- * Paleta de cores centralizada do tema Neural.
- * Todos os screens devem importar daqui em vez de definir cores localmente.
- */
+/** Identidade ai-drone: contraste elevado, superficies neutras e cor apenas para alertas reais. */
 object NeuralColors {
-    // Fundos
-    val Bg            = Color(0xFF050E1F)
-    val Surface       = Color(0xFF0A1628)
-    val SurfaceAlt    = Color(0xFF071120)
-    val SurfaceOverlay = Color(0xCC0A1628)  // para painéis sobrepostos ao mapa
-
-    // Bordas
-    val Border        = Color(0xFF0D2040)
-    val BorderStrong  = Color(0xFF0D2A50)
-
-    // Principais
-    val Primary       = Color(0xFF00C2FF)   // ciano neural
-    val Secondary     = Color(0xFF0066FF)   // azul neural
-
-    // Semânticas
-    val Success       = Color(0xFF00E5A0)
-    val Warning       = Color(0xFFFFB800)
-    val Danger        = Color(0xFFFF3B6E)
-
-    // Texto
-    val TextPrimary   = Color(0xEBFFFFFF)   // branco 92%
-    val Muted         = Color(0xFF4A7FA5)   // azul-cinza muted
-
-    // Extras
-    val CardGlow      = Color(0xFF112A4A)
-    val GridLine      = Color(0x0A4EA1FF)
+    val Bg = Color(0xFF090A0B)
+    val Surface = Color(0xFF151719)
+    val SurfaceAlt = Color(0xFF1D2022)
+    val SurfaceOverlay = Color(0xE6151719)
+    val Border = Color(0xFF303437)
+    val BorderStrong = Color(0xFF4C5256)
+    val Primary = Color(0xFFEFF2F3)
+    val Secondary = Color(0xFFB4BDC2)
+    val Success = Color(0xFF8DD8AA)
+    val Warning = Color(0xFFF4CA86)
+    val Danger = Color(0xFFF28F8F)
+    val TextPrimary = Color(0xFFF5F6F6)
+    val Muted = Color(0xFFABB2B6)
+    val CardGlow = Color(0xFF25292B)
+    val GridLine = Color(0x102C3135)
 }
