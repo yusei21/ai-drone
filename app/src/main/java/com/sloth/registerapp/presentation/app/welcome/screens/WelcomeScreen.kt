@@ -113,10 +113,16 @@ private fun AppHeader() {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Image(
-            painter = painterResource(id = R.mipmap.ic_launcher_foreground),
-            contentDescription = "ai-drone",
-            modifier = Modifier.size(80.dp)
+        Text(
+            text = "A / D",
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 5.sp,
+            modifier = Modifier
+                .background(CardSurface, RoundedCornerShape(12.dp))
+                .border(1.dp, BorderSub, RoundedCornerShape(12.dp))
+                .padding(horizontal = 22.dp, vertical = 18.dp)
         )
 
         Spacer(modifier = Modifier.height(18.dp))
