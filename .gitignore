@@ -50,3 +50,6 @@ sentry.properties
 !documentacao/
 !documentacao/**/
 !documentacao/**/*.md
+
+# Modelo Android embarcado e gerado localmente; nao publicar pesos de terceiros
+/app/src/main/assets/ml_models/*.tflite
