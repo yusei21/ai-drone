@@ -132,7 +132,7 @@ fun SettingsScreen(
                         color = Color.White
                     )
                     Text(
-                        text = "Personalize o sistema",
+                        text = "ai-drone  /  v${BuildConfig.VERSION_NAME}  /  YOLO26n Pessoas 640",
                         fontSize = 11.sp,
                         color = NeuralColors.Muted
                     )
