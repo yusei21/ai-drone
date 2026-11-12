@@ -185,7 +185,13 @@ class MainActivity : ComponentActivity() {
                                     )
                                     DJIConnectionHelper.tryReconnect(context)
                                 },
-                                onSettingsClick = { navController.navigate("settings") }
+                                onSettingsClick = { navController.navigate("settings") },
+                                onOpenCameraClick = {
+                                    val intent = Intent(context, DroneCameraActivity::class.java)
+                                    context.startActivity(intent)
+                                },
+                                onMissionsClick = { navController.navigate("mission") },
+                                onReportsClick = { navController.navigate("report") }
                             )
                         }
                     }
