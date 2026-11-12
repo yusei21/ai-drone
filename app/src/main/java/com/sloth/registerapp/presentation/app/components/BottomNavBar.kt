@@ -55,90 +55,58 @@ fun BottomNavBar(
     onLiveFeedClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val neuralBg = NeuralColors.Bg
-    val neuralSurface = NeuralColors.Surface
-    val neuralBorder = NeuralColors.Border
-    val neuralPrimary = NeuralColors.Primary
-    val neuralSecondary = NeuralColors.Secondary
-    val inactive = NeuralColors.Muted
-
-    val items = listOf(
-        BottomItem.Home,
-        BottomItem.Live,
-        BottomItem.Missions,
-        BottomItem.Reports
-    )
-
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-
+    val items = listOf(BottomItem.Home, BottomItem.Live, BottomItem.Missions, BottomItem.Reports)
+    val stackEntry by navController.currentBackStackEntryAsState()
+    val route = stackEntry?.destination?.route
     Surface(
         modifier = modifier,
-        color = neuralBg,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp
+        color = NeuralColors.Bg,
+        border = BorderStroke(1.dp, NeuralColors.Border),
+        tonalElevation = 0.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 12.dp, vertical = 9.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             items.forEach { item ->
-                val selected = currentRoute == item.route
-                val itemColor = if (selected) neuralPrimary else inactive
-
+                val selected = route == item.route
                 Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(54.dp),
-                    color = if (selected) neuralSurface else Color.Transparent,
-                    contentColor = itemColor,
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(
-                        1.dp,
-                        if (selected) NeuralColors.BorderStrong else neuralBorder
-                    ),
+                    modifier = Modifier.weight(1f).height(57.dp),
                     onClick = {
                         if (item.route == BottomItem.Live.route) {
                             onLiveFeedClick()
-                        } else if (currentRoute != item.route) {
+                        } else if (route != item.route) {
                             navController.navigate(item.route) {
                                 popUpTo("dashboard") { saveState = true }
                                 launchSingleTop = true
                                 restoreState = true
                             }
                         }
-                    }
+                    },
+                    color = if (selected) NeuralColors.SurfaceAlt else Color.Transparent,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(
+                        1.dp,
+                        if (selected) NeuralColors.BorderStrong else Color.Transparent
+                    )
                 ) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        if (selected) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(1.dp)
-                                    .align(Alignment.TopCenter)
-                                    .background(
-                                        Brush.horizontalGradient(
-                                            colors = listOf(Color.Transparent, neuralPrimary, Color.Transparent)
-                                        )
-                                    )
-                            )
-                        }
-
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        val tint = if (selected) Color.White else NeuralColors.Muted
+                        CompositionLocalProvider(LocalContentColor provides tint) {
+                            item.icon()
+                            Spacer(Modifier.height(3.dp))
                             ProvideTextStyle(MaterialTheme.typography.labelSmall) {
-                                CompositionLocalProvider(LocalContentColor provides itemColor) {
-                                    item.icon()
-                                    Spacer(Modifier.height(2.dp))
-                                    Text(item.label())
-                                }
+                                Text(
+                                    text = item.label(),
+                                    color = tint
+                                )
                             }
                         }
                     }
